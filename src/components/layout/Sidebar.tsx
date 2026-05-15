@@ -1,9 +1,12 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Building2,
   CalendarDays,
   ClipboardPlus,
+  ChevronDown,
+  ChevronRight,
   Gauge,
   HeartPulse,
   LogOut,
@@ -26,13 +29,20 @@ const navigation = [
   { label: "Branches", to: "/branches", icon: Building2 },
   { label: "Services", to: "/services", icon: HeartPulse },
   { label: "Reports", to: "/reports", icon: BarChart3 },
-  { label: "Users & Roles", to: "/users", icon: UserRoundCog },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
 export function Sidebar({ open, collapsed, onClose }: { open: boolean; collapsed: boolean; onClose: () => void }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toggleTheme } = useTheme();
+  const [usersGroupOpen, setUsersGroupOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/users") || location.pathname.startsWith("/roles")) {
+      setUsersGroupOpen(true);
+    }
+  }, [location.pathname]);
 
   return (
     <>
@@ -62,8 +72,61 @@ export function Sidebar({ open, collapsed, onClose }: { open: boolean; collapsed
             >
               <item.icon className="shrink-0" size={21} />
               <span className={cn("truncate transition-opacity", collapsed && "lg:hidden")}>{item.label}</span>
-            </NavLink>
+              </NavLink>
           ))}
+          <div>
+            <button
+              type="button"
+              onClick={() => setUsersGroupOpen((current) => !current)}
+              title={collapsed ? "Users & Roles" : undefined}
+              aria-expanded={usersGroupOpen}
+              className={cn(
+                "flex h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-semibold transition",
+                collapsed && "lg:justify-center lg:px-0",
+                location.pathname.startsWith("/users") || location.pathname.startsWith("/roles")
+                  ? "bg-xroads-50 text-xroads-800 dark:bg-xroads-500/15 dark:text-xroads-200"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-zinc-900 dark:hover:text-slate-50",
+              )}
+            >
+              <UserRoundCog className="shrink-0" size={21} />
+              <span className={cn("truncate transition-opacity", collapsed && "lg:hidden")}>Users & Roles</span>
+              <span className={cn("ml-auto transition-opacity", collapsed && "lg:hidden")}>
+                {usersGroupOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              </span>
+            </button>
+            {usersGroupOpen && !collapsed ? (
+              <div className="mt-1 space-y-1 pl-4">
+                <NavLink
+                  to="/users"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex h-10 items-center rounded-md px-3 text-sm font-medium transition",
+                      isActive
+                        ? "bg-xroads-50 text-xroads-800 dark:bg-xroads-500/15 dark:text-xroads-200"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-zinc-900 dark:hover:text-slate-50",
+                    )
+                  }
+                >
+                  Users
+                </NavLink>
+                <NavLink
+                  to="/roles"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex h-10 items-center rounded-md px-3 text-sm font-medium transition",
+                      isActive
+                        ? "bg-xroads-50 text-xroads-800 dark:bg-xroads-500/15 dark:text-xroads-200"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-zinc-900 dark:hover:text-slate-50",
+                    )
+                  }
+                >
+                  Roles
+                </NavLink>
+              </div>
+            ) : null}
+          </div>
         </nav>
         <div className={cn("m-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950", collapsed && "lg:hidden")}>
           <div>

@@ -45,6 +45,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { EmptyState } from "../components/shared/EmptyState";
 import { FilterField } from "../components/shared/Filters";
 import { cn } from "../lib/utils";
+import { CREATED_EVENTS } from "../lib/create-events";
 
 type CalendarView = "day" | "week" | "month" | "year";
 type FilterValue = "All" | string;
@@ -76,10 +77,11 @@ export function CalendarPage() {
   const [dentist, setDentist] = useState<FilterValue>("All");
   const [status, setStatus] = useState<AppointmentStatus | "All">("All");
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingList, setBookingList] = useState<Appointment[]>(appointments);
 
   const filteredAppointments = useMemo(
     () =>
-      appointments
+      bookingList
         .filter((appointment) => {
           const branchMatch = branch === "All" || appointment.branchId === branch;
           const dentistMatch = dentist === "All" || appointment.dentistId === dentist;
@@ -87,7 +89,7 @@ export function CalendarPage() {
           return branchMatch && dentistMatch && statusMatch;
         })
         .sort(sortAppointments),
-    [branch, dentist, status],
+    [bookingList, branch, dentist, status],
   );
 
   const range = useMemo(() => getViewRange(view, anchorDate), [view, anchorDate]);
@@ -131,6 +133,19 @@ export function CalendarPage() {
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [agendaOpen]);
+
+  useEffect(() => {
+    const handleCreated = (event: Event) => {
+      const customEvent = event as CustomEvent<Appointment>;
+      if (!customEvent.detail?.id) return;
+      setBookingList((current) =>
+        current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
+      );
+    };
+
+    window.addEventListener(CREATED_EVENTS.booking, handleCreated);
+    return () => window.removeEventListener(CREATED_EVENTS.booking, handleCreated);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -245,7 +260,7 @@ export function CalendarPage() {
         </CardContent>
       </Card>
 
-      <NewBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} />
+      <NewBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} onCreate={(booking) => setBookingList((current) => [booking, ...current])} />
       <AgendaModal
         open={agendaOpen}
         date={anchorDate}
@@ -578,10 +593,10 @@ function AgendaModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby="agenda-title"
-          className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-slate-200 bg-background shadow-soft dark:border-zinc-800"
+          className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-slate-200 bg-background shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5 dark:border-zinc-800">
+          <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5 dark:border-neutral-800">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Selected day agenda</p>
               <h2 id="agenda-title" className="mt-1 text-xl font-semibold text-slate-950 dark:text-slate-50">
@@ -618,11 +633,11 @@ function AgendaBookingCard({ appointment, index }: { appointment: Appointment; i
   return (
     <article
       className={cn(
-        "grid grid-cols-[72px_1fr_auto] items-center gap-4 rounded-lg border border-slate-100 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900",
+        "grid grid-cols-[72px_1fr_auto] items-center gap-4 rounded-lg border border-slate-100 bg-white px-4 py-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-800",
         appointment.emergency ? "border-rose-200 ring-4 ring-rose-50 dark:border-rose-900/70 dark:ring-rose-950/30" : "border-slate-200",
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-xroads-50 text-sm font-semibold text-xroads-700 dark:bg-zinc-800 dark:text-xroads-200">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-xroads-50 text-sm font-semibold text-xroads-700 dark:bg-neutral-800 dark:text-xroads-200">
         {index + 1}
       </div>
       <div className="min-w-0">

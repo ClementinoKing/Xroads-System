@@ -10,6 +10,8 @@ import { BranchesPage } from "../pages/BranchesPage";
 import { ServicesPage } from "../pages/ServicesPage";
 import { ReportsPage } from "../pages/ReportsPage";
 import { UsersPage } from "../pages/UsersPage";
+import { RolesPage } from "../pages/RolesPage";
+import { UserProfilePage } from "../pages/UserProfilePage";
 import { SettingsPage } from "../pages/SettingsPage";
 
 export function AppRoutes() {
@@ -26,6 +28,8 @@ export function AppRoutes() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/users/:userId" element={<UserProfilePage />} />
+        <Route path="/roles" element={<RolesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

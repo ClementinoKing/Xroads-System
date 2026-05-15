@@ -1,12 +1,28 @@
+import { useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
 import { appointments } from "../data/appointments";
-import { branches } from "../data/branches";
+import { branches, type Branch } from "../data/branches";
 import { dentists } from "../data/dentists";
 import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
+import { CREATED_EVENTS } from "../lib/create-events";
 
 export function BranchesPage() {
   const today = new Date().toISOString().slice(0, 10);
+  const [branchList, setBranchList] = useState<Branch[]>(branches);
+
+  useEffect(() => {
+    const handleCreated = (event: Event) => {
+      const customEvent = event as CustomEvent<Branch>;
+      if (!customEvent.detail?.id) return;
+      setBranchList((current) =>
+        current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
+      );
+    };
+
+    window.addEventListener(CREATED_EVENTS.branch, handleCreated);
+    return () => window.removeEventListener(CREATED_EVENTS.branch, handleCreated);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -15,7 +31,7 @@ export function BranchesPage() {
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Operational snapshot for Xroads Dental and Gateway Dental.</p>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
-        {branches.map((branch) => {
+        {branchList.map((branch) => {
           const branchAppointments = appointments.filter((item) => item.branchId === branch.id && item.date === today);
           return (
             <Card key={branch.id} className="p-6">

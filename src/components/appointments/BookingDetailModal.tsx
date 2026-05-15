@@ -16,10 +16,10 @@ export function BookingDetailModal({ booking, open, onClose }: { booking: Appoin
   const dentist = dentists.find((item) => item.id === booking.dentistId);
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-slate-950/35 p-4">
-      <div className="mx-auto flex h-full w-full max-w-4xl items-center">
-        <div className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-slate-900">
-          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+    <div className="fixed inset-0 z-[9999] bg-slate-950/35 p-4" onClick={onClose}>
+      <div className="mx-auto flex h-full w-full max-w-4xl items-center" onClick={(event) => event.stopPropagation()}>
+        <div className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-neutral-900">
+          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-neutral-800">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">Booking detail</p>
@@ -99,7 +99,7 @@ function DetailItem({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 dark:border-neutral-800 dark:bg-neutral-800">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
         <Icon size={15} className="text-xroads-600" />
         {label}
@@ -111,7 +111,7 @@ function DetailItem({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 last:border-0 dark:border-zinc-800">
+    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 last:border-0 dark:border-neutral-800">
       <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
       <span className="text-right text-sm font-semibold text-slate-950 dark:text-slate-50">{value}</span>
     </div>

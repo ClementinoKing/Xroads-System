@@ -1,4 +1,4 @@
-export type BranchId = "xroads-dental" | "gateway-dental";
+export type BranchId = string;
 
 export type Branch = {
   id: BranchId;

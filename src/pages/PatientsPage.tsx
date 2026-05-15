@@ -1,96 +1,196 @@
-import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { branches } from "../data/branches";
-import { patients } from "../data/patients";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { patients, type Patient } from "../data/patients";
 import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { DataTable, type DataTableColumn } from "../components/shared/DataTable";
 import { FilterField } from "../components/shared/Filters";
-import { EmptyState } from "../components/shared/EmptyState";
+import { AddPatientModal } from "../components/patients/AddPatientModal";
+import { PatientDetailModal } from "../components/patients/PatientDetailModal";
+import { CREATED_EVENTS } from "../lib/create-events";
+
+type BranchFilter = "All" | string;
+
+const patientColumns: Array<DataTableColumn<Patient>> = [
+  {
+    key: "patient",
+    header: "Patient",
+    cell: (patient) => (
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-xroads-500 text-sm font-bold text-white">
+          {patient.name.slice(0, 2).toUpperCase()}
+        </div>
+        <div>
+          <div className="font-semibold text-slate-950 dark:text-slate-50">{patient.name}</div>
+          <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-400">{patient.id}</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "contact",
+    header: "Contact",
+    cell: (patient) => (
+      <>
+        <div className="font-medium text-slate-700 dark:text-slate-200">{patient.phone}</div>
+        <div className="mt-1 text-xs text-slate-400">{patient.email ?? "No email provided"}</div>
+      </>
+    ),
+  },
+  {
+    key: "branch",
+    header: "Branch",
+    className: "text-slate-600 dark:text-slate-300",
+    cell: (patient) => branches.find((item) => item.id === patient.branchId)?.name ?? "Branch",
+  },
+  {
+    key: "lastVisit",
+    header: "Last visit",
+    className: "text-slate-600 dark:text-slate-300",
+    cell: (patient) => patient.lastVisit,
+  },
+  {
+    key: "nextAppointment",
+    header: "Next appointment",
+    className: "text-slate-600 dark:text-slate-300",
+    cell: (patient) => patient.nextAppointment,
+  },
+  {
+    key: "payment",
+    header: "Payment",
+    cell: (patient) => (
+      <Badge className="bg-slate-100 text-slate-700 ring-slate-200 dark:bg-zinc-900 dark:text-slate-200 dark:ring-zinc-700">
+        {patient.schemeName ?? patient.paymentMethod}
+      </Badge>
+    ),
+  },
+];
 
 export function PatientsPage() {
+  const [patientList, setPatientList] = useState<Patient[]>(patients);
   const [search, setSearch] = useState("");
-  const [branch, setBranch] = useState("All");
-  const [selectedPatientId, setSelectedPatientId] = useState(patients[0]?.id);
+  const [branch, setBranch] = useState<BranchFilter>("All");
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const filteredPatients = useMemo(
-    () => patients.filter((patient) => {
-      const query = search.toLowerCase();
-      return (branch === "All" || patient.branchId === branch) && [patient.name, patient.phone, patient.email ?? ""].some((value) => value.toLowerCase().includes(query));
-    }),
-    [branch, search],
+  const filteredPatients = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return patientList.filter((patient) => {
+      const branchMatch = branch === "All" || patient.branchId === branch;
+      const queryMatch =
+        !query ||
+        [patient.name, patient.phone, patient.email ?? "", patient.paymentMethod, patient.schemeName ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+
+      return branchMatch && queryMatch;
+    });
+  }, [branch, patientList, search]);
+
+  const selectedPatient = useMemo(
+    () => filteredPatients.find((patient) => patient.id === selectedPatientId) ?? null,
+    [filteredPatients, selectedPatientId],
   );
-  const selectedPatient = patients.find((patient) => patient.id === selectedPatientId) ?? filteredPatients[0];
+  const hasActiveFilters = search.trim() !== "" || branch !== "All";
+
+  function clearFilters() {
+    setSearch("");
+    setBranch("All");
+  }
+
+  function createPatient(patient: Patient) {
+    setPatientList((current) => [patient, ...current]);
+  }
+
+  useEffect(() => {
+    const handleCreated = (event: Event) => {
+      const customEvent = event as CustomEvent<Patient>;
+      if (!customEvent.detail?.id) return;
+      setPatientList((current) =>
+        current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
+      );
+    };
+
+    window.addEventListener(CREATED_EVENTS.patient, handleCreated);
+    return () => window.removeEventListener(CREATED_EVENTS.patient, handleCreated);
+  }, []);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title">Patients</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Search patients, review upcoming appointments, and payment preference.</p>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="page-title">Patients</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Search patients, review upcoming appointments, and payment preference.</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus size={18} />
+          Create patient
+        </Button>
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-        <Card>
-          <CardHeader className="grid gap-4 md:grid-cols-[1fr_220px]">
-            <label className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={17} />
-              <input className="input pl-10" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search patient name, phone, email" />
-            </label>
-            <FilterField label="Branch">
-              <select className="input" value={branch} onChange={(event) => setBranch(event.target.value)}>
-                <option>All</option>
-                {branches.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+
+      <Card>
+        <CardHeader className="space-y-4 bg-slate-50/70 dark:bg-zinc-950">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-xroads-700 ring-1 ring-slate-200 dark:bg-zinc-900 dark:text-xroads-300 dark:ring-zinc-800">
+                <SlidersHorizontal size={18} />
+              </div>
+              <div>
+                <CardTitle>Search & filters</CardTitle>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {filteredPatients.length} of {patientList.length} patients shown
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" className="h-10 w-full px-3 lg:w-auto" onClick={clearFilters} disabled={!hasActiveFilters}>
+              <RotateCcw size={16} />
+              Reset
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+            <FilterField label="Search" className="lg:flex-1">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={19} />
+                <input
+                  className="input h-12 pl-11 text-base lg:min-w-[420px]"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search patient name, phone, email, or scheme"
+                />
+              </div>
+            </FilterField>
+            <FilterField label="Branch" className="lg:w-[280px]">
+              <select className="input h-12 text-base lg:w-[280px]" value={branch} onChange={(event) => setBranch(event.target.value)}>
+                <option value="All">All branches</option>
+                {branches.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
               </select>
             </FilterField>
-          </CardHeader>
-          <CardContent className="overflow-x-auto p-0">
-            {filteredPatients.length ? (
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="bg-slate-50 dark:bg-slate-900 text-xs uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3">Patient</th>
-                    <th className="px-5 py-3">Phone</th>
-                    <th className="px-5 py-3">Last visit</th>
-                    <th className="px-5 py-3">Next appointment</th>
-                    <th className="px-5 py-3">Payment</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredPatients.map((patient) => (
-                    <tr key={patient.id} className="cursor-pointer hover:bg-xroads-50/40" onClick={() => setSelectedPatientId(patient.id)}>
-                      <td className="px-5 py-4 font-semibold text-slate-950 dark:text-slate-50">{patient.name}</td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{patient.phone}</td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{patient.lastVisit}</td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{patient.nextAppointment}</td>
-                      <td className="px-5 py-4"><Badge className="bg-slate-100 text-slate-700 dark:text-slate-200 ring-slate-200">{patient.schemeName ?? patient.paymentMethod}</Badge></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <div className="p-5"><EmptyState title="No patients found" description="Try a different search term or branch filter." /></div>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Patient preview</CardTitle></CardHeader>
-          <CardContent>
-            {selectedPatient ? (
-              <div className="space-y-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-xroads-500 text-xl font-bold text-white">{selectedPatient.name.slice(0, 2).toUpperCase()}</div>
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-950 dark:text-slate-50">{selectedPatient.name}</h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{selectedPatient.phone}</p>
-                </div>
-                <Preview label="Branch" value={branches.find((item) => item.id === selectedPatient.branchId)?.name ?? ""} />
-                <Preview label="Last visit" value={selectedPatient.lastVisit} />
-                <Preview label="Next appointment" value={selectedPatient.nextAppointment} />
-                <Preview label="Payment" value={selectedPatient.schemeName ?? selectedPatient.paymentMethod} />
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <DataTable
+            rows={filteredPatients}
+            columns={patientColumns}
+            getRowKey={(patient) => patient.id}
+            minWidth="980px"
+            emptyTitle="No patients found"
+            emptyDescription="Try a different search term or branch filter."
+            onRowClick={(patient) => setSelectedPatientId(patient.id)}
+          />
+        </CardContent>
+      </Card>
+
+      <AddPatientModal open={createOpen} onClose={() => setCreateOpen(false)} onCreate={createPatient} />
+      <PatientDetailModal open={Boolean(selectedPatient)} patient={selectedPatient} onClose={() => setSelectedPatientId(null)} />
     </div>
   );
-}
-
-function Preview({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-lg bg-slate-50 dark:bg-slate-900 p-3"><p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">{label}</p><p className="mt-1 text-sm font-semibold text-slate-950 dark:text-slate-50">{value}</p></div>;
 }

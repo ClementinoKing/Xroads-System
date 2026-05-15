@@ -4,6 +4,7 @@ import {
   Bell,
   CalendarPlus,
   CirclePlus,
+  Building2,
   HeartPulse,
   LogOut,
   Menu,
@@ -11,11 +12,11 @@ import {
   Settings,
   Stethoscope,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 import { branches } from "../../data/branches";
 import { Button } from "../ui/Button";
 import { cn } from "../../lib/utils";
+import { CREATE_EVENTS } from "../../lib/create-events";
 
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const navigate = useNavigate();
@@ -40,9 +41,9 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     };
   }, []);
 
-  function handleCreateAction(path: string) {
+  function handleCreateAction(eventName: string) {
     setCreateOpen(false);
-    navigate(path);
+    window.dispatchEvent(new Event(eventName));
   }
 
   return (
@@ -66,11 +67,11 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         </Button>
         {createOpen ? (
           <div className="absolute left-0 top-14 z-50 w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-950">
-            <MenuItem icon={CalendarPlus} label="Booking" onClick={() => handleCreateAction("/booking")} />
-            <MenuItem icon={UsersRound} label="Clients" onClick={() => handleCreateAction("/patients")} />
-            <MenuItem icon={UserRound} label="Patients" onClick={() => handleCreateAction("/patients")} />
-            <MenuItem icon={Stethoscope} label="Dentists" onClick={() => handleCreateAction("/dentists")} />
-            <MenuItem icon={HeartPulse} label="Services" onClick={() => handleCreateAction("/services")} />
+            <MenuItem icon={CalendarPlus} label="Booking" onClick={() => handleCreateAction(CREATE_EVENTS.booking)} />
+            <MenuItem icon={UserRound} label="Patient" onClick={() => handleCreateAction(CREATE_EVENTS.patient)} />
+            <MenuItem icon={Stethoscope} label="Dentist" onClick={() => handleCreateAction(CREATE_EVENTS.dentist)} />
+            <MenuItem icon={Building2} label="Branch" onClick={() => handleCreateAction(CREATE_EVENTS.branch)} />
+            <MenuItem icon={HeartPulse} label="Service" onClick={() => handleCreateAction(CREATE_EVENTS.service)} />
           </div>
         ) : null}
       </div>

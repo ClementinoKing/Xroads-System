@@ -1,10 +1,12 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { CalendarPlus, X } from "lucide-react";
+import type { Appointment } from "../../data/appointments";
 import { branches } from "../../data/branches";
 import { dentists } from "../../data/dentists";
 import { services } from "../../data/services";
 import { Button } from "../ui/Button";
+import { DatePicker } from "../ui/date-picker";
 import { useToast } from "../shared/ToastProvider";
 
 const timeSlots = ["08:00", "08:30", "09:00", "10:00", "11:00", "12:00", "14:00", "15:30", "16:30", "17:00"];
@@ -37,7 +39,15 @@ const initialForm: BookingForm = {
   notes: "",
 };
 
-export function NewBookingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NewBookingModal({
+  open,
+  onClose,
+  onCreate,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreate?: (booking: Appointment) => void;
+}) {
   const [form, setForm] = useState<BookingForm>(initialForm);
   const { showToast } = useToast();
 
@@ -52,9 +62,27 @@ export function NewBookingModal({ open, onClose }: { open: boolean; onClose: () 
 
   function submitBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const serviceName = selectedService?.name ?? "Booking";
+    const booking: Appointment = {
+      id: `APT-${Date.now().toString().slice(-4)}`,
+      patientName: form.patientName.trim() || "Patient",
+      phone: form.phone.trim(),
+      branchId: form.branchId as Appointment["branchId"],
+      dentistId: form.dentistId,
+      service: serviceName,
+      date: form.date,
+      time: form.time,
+      status: "Pending",
+      paymentType: form.paymentType,
+      schemeName: form.paymentType === "Medical Scheme" ? form.schemeName.trim() || undefined : undefined,
+      notes: form.notes.trim(),
+      emergency: false,
+    };
+
+    onCreate?.(booking);
     showToast({
       title: "Mock booking created",
-      description: `${form.patientName || "Patient"} is scheduled for ${selectedService?.name} at ${form.time}.`,
+      description: `${booking.patientName} is scheduled for ${serviceName} at ${booking.time}.`,
     });
     setForm(initialForm);
     onClose();
@@ -64,11 +92,14 @@ export function NewBookingModal({ open, onClose }: { open: boolean; onClose: () 
 
   return (
     createPortal(
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/35 p-4">
-        <div className="flex max-h-[92dvh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/35 p-4" onClick={onClose}>
+        <div
+          className="flex max-h-[92dvh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-neutral-900"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-neutral-800">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-xroads-50 p-2 text-xroads-700">
+            <div className="rounded-lg bg-xroads-50 p-2 text-xroads-700 dark:bg-neutral-800 dark:text-xroads-200">
                 <CalendarPlus size={20} />
               </div>
               <div>
@@ -127,7 +158,7 @@ export function NewBookingModal({ open, onClose }: { open: boolean; onClose: () 
                 </select>
               </Field>
               <Field label="Date">
-                <input className="input" type="date" value={form.date} onChange={(event) => update("date", event.target.value)} required />
+                <DatePicker value={form.date} onChange={(value) => update("date", value)} />
               </Field>
               <Field label="Time slot">
                 <select className="input" value={form.time} onChange={(event) => update("time", event.target.value)}>
@@ -156,7 +187,7 @@ export function NewBookingModal({ open, onClose }: { open: boolean; onClose: () 
                 <textarea className="input min-h-28 py-3" value={form.notes} onChange={(event) => update("notes", event.target.value)} placeholder="Symptoms, preferences, referral notes" />
               </label>
             </div>
-            <div className="border-t border-slate-100 p-5 dark:border-slate-800">
+            <div className="border-t border-slate-100 p-5 dark:border-neutral-800">
               <Button type="submit" className="w-full sm:w-auto">
                 Create mock booking
               </Button>

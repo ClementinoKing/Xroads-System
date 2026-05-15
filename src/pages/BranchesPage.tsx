@@ -12,7 +12,7 @@ export function BranchesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="page-title">Branches</h1>
-        <p className="mt-1 text-sm text-slate-500">Operational snapshot for Xroads Dental and Gateway Dental.</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Operational snapshot for Xroads Dental and Gateway Dental.</p>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
         {branches.map((branch) => {
@@ -23,8 +23,8 @@ export function BranchesPage() {
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-xroads-50 p-3 text-xroads-700"><Building2 size={24} /></div>
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-950">{branch.name}</h2>
-                    <p className="text-sm text-slate-500">{branch.address}</p>
+                    <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">{branch.name}</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{branch.address}</p>
                   </div>
                 </div>
                 <Badge className="bg-emerald-50 text-emerald-700 ring-emerald-200">{branch.status}</Badge>
@@ -35,7 +35,7 @@ export function BranchesPage() {
                 <Metric label="Completed" value={branchAppointments.filter((item) => item.status === "Completed").length} />
                 <Metric label="Pending" value={branchAppointments.filter((item) => item.status === "Pending").length} />
               </div>
-              <p className="mt-5 rounded-md bg-slate-50 p-3 text-sm text-slate-600">{branch.hours}</p>
+              <p className="mt-5 rounded-md bg-slate-50 dark:bg-slate-900 p-3 text-sm text-slate-600 dark:text-slate-300">{branch.hours}</p>
             </Card>
           );
         })}
@@ -45,5 +45,5 @@ export function BranchesPage() {
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-lg border border-slate-100 p-4"><p className="text-2xl font-bold text-slate-950">{value}</p><p className="mt-1 text-sm text-slate-500">{label}</p></div>;
+  return <div className="rounded-lg border border-slate-100 dark:border-slate-800 p-4"><p className="text-2xl font-bold text-slate-950 dark:text-slate-50">{value}</p><p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{label}</p></div>;
 }

@@ -6,7 +6,7 @@ export function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="page-title">Settings</h1>
-        <p className="mt-1 text-sm text-slate-500">Frontend preview of system preferences for future configuration.</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Frontend preview of system preferences for future configuration.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {[
@@ -16,8 +16,8 @@ export function SettingsPage() {
         ].map((item) => (
           <Card key={item.title} className="p-5">
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-xroads-50 text-xroads-700"><item.icon size={22} /></div>
-            <h2 className="font-semibold text-slate-950">{item.title}</h2>
-            <p className="mt-2 text-sm text-slate-500">{item.text}</p>
+            <h2 className="font-semibold text-slate-950 dark:text-slate-50">{item.title}</h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{item.text}</p>
           </Card>
         ))}
       </div>

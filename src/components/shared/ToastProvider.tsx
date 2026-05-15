@@ -23,12 +23,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="fixed bottom-4 right-4 z-50 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3">
         {toasts.map((toast) => (
-          <div key={toast.id} className="rounded-lg border border-xroads-100 bg-white p-4 shadow-soft">
+          <div key={toast.id} className="rounded-lg border border-xroads-100 bg-white p-4 shadow-soft dark:border-zinc-800 dark:bg-zinc-950">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 text-xroads-700" size={20} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-slate-950">{toast.title}</p>
-                {toast.description ? <p className="mt-1 text-sm text-slate-500">{toast.description}</p> : null}
+                <p className="text-sm font-semibold text-slate-950 dark:text-slate-50">{toast.title}</p>
+                {toast.description ? <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{toast.description}</p> : null}
               </div>
               <Button
                 type="button"

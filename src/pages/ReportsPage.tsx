@@ -6,7 +6,7 @@ export function ReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="page-title">Reports</h1>
-        <p className="mt-1 text-sm text-slate-500">Visual operational reporting using lightweight mock stat layouts.</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Visual operational reporting using lightweight mock stat layouts.</p>
       </div>
       <div className="grid gap-6 xl:grid-cols-2">
         <ReportBars title="Appointments by branch" data={reports.appointmentsByBranch} />
@@ -16,9 +16,9 @@ export function ReportsPage() {
           <CardHeader><CardTitle>Cash vs Medical Scheme</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {reports.paymentSplit.map((item) => (
-              <div key={item.label} className="rounded-xl bg-slate-50 p-4">
+              <div key={item.label} className="rounded-xl bg-slate-50 dark:bg-slate-900 p-4">
                 <div className="flex justify-between text-sm font-semibold"><span>{item.label}</span><span>{item.value}%</span></div>
-                <div className="mt-3 h-3 rounded-full bg-white"><div className="h-3 rounded-full bg-xroads-600" style={{ width: `${item.value}%` }} /></div>
+                <div className="mt-3 h-3 rounded-full bg-white dark:bg-slate-900"><div className="h-3 rounded-full bg-xroads-600" style={{ width: `${item.value}%` }} /></div>
               </div>
             ))}
           </CardContent>
@@ -39,7 +39,7 @@ export function ReportsPage() {
               {reports.dailyCompleted.map((value, index) => (
                 <div key={`${value}-${index}`} className="flex flex-1 flex-col items-center gap-2">
                   <div className="w-full rounded-t-lg bg-xroads-600" style={{ height: `${value * 6}px` }} />
-                  <span className="text-xs font-semibold text-slate-500">Day {index + 1}</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">Day {index + 1}</span>
                 </div>
               ))}
             </div>
@@ -59,8 +59,8 @@ function ReportBars({ title, data }: { title: string; data: Array<{ label: strin
         {data.map((item) => (
           <div key={item.label}>
             <div className="mb-2 flex justify-between text-sm">
-              <span className="font-semibold text-slate-900">{item.label}</span>
-              <span className="text-slate-500">{item.value}</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{item.label}</span>
+              <span className="text-slate-500 dark:text-slate-400 dark:text-slate-500">{item.value}</span>
             </div>
             <div className="h-3 rounded-full bg-slate-100">
               <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${(item.value / max) * 100}%` }} />

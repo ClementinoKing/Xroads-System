@@ -58,6 +58,7 @@ export function AddUserModal({
       showToast({
         title: "Email already exists",
         description: "Use a different email address before creating this user.",
+        variant: "warning",
       });
       return;
     }
@@ -76,6 +77,7 @@ export function AddUserModal({
     showToast({
       title: "User created",
       description: `${user.name} has been added to the staff list.`,
+      variant: "success",
     });
     setForm(initialForm);
     onClose();

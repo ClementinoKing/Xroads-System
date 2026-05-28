@@ -18,7 +18,7 @@ import type { DentalService } from "../../data/services";
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [bookingOpen, setBookingOpen] = useState(false);
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [patientOpen, setPatientOpen] = useState(false);
   const [dentistOpen, setDentistOpen] = useState(false);
   const [branchOpen, setBranchOpen] = useState(false);
@@ -36,7 +36,7 @@ export function AppLayout() {
 
   useEffect(() => {
     const openHandlers: Record<string, () => void> = {
-      [CREATE_EVENTS.booking]: () => setBookingOpen(true),
+      [CREATE_EVENTS.appointment]: () => setAppointmentOpen(true),
       [CREATE_EVENTS.patient]: () => setPatientOpen(true),
       [CREATE_EVENTS.dentist]: () => setDentistOpen(true),
       [CREATE_EVENTS.branch]: () => setBranchOpen(true),
@@ -49,14 +49,14 @@ export function AppLayout() {
       handler?.();
     };
 
-    window.addEventListener(CREATE_EVENTS.booking, handleCreateRequest);
+    window.addEventListener(CREATE_EVENTS.appointment, handleCreateRequest);
     window.addEventListener(CREATE_EVENTS.patient, handleCreateRequest);
     window.addEventListener(CREATE_EVENTS.dentist, handleCreateRequest);
     window.addEventListener(CREATE_EVENTS.branch, handleCreateRequest);
     window.addEventListener(CREATE_EVENTS.service, handleCreateRequest);
 
     return () => {
-      window.removeEventListener(CREATE_EVENTS.booking, handleCreateRequest);
+      window.removeEventListener(CREATE_EVENTS.appointment, handleCreateRequest);
       window.removeEventListener(CREATE_EVENTS.patient, handleCreateRequest);
       window.removeEventListener(CREATE_EVENTS.dentist, handleCreateRequest);
       window.removeEventListener(CREATE_EVENTS.branch, handleCreateRequest);
@@ -72,8 +72,8 @@ export function AppLayout() {
     window.dispatchEvent(new CustomEvent(CREATED_EVENTS.dentist, { detail: dentist }));
   }
 
-  function handleBookingCreated(booking: Appointment) {
-    window.dispatchEvent(new CustomEvent(CREATED_EVENTS.booking, { detail: booking }));
+  function handleAppointmentCreated(appointment: Appointment) {
+    window.dispatchEvent(new CustomEvent(CREATED_EVENTS.appointment, { detail: appointment }));
   }
 
   function handleBranchCreated(branch: Branch) {
@@ -95,7 +95,7 @@ export function AppLayout() {
       <main className={cn("px-4 py-6 transition-[padding] sm:px-6 lg:px-8", sidebarCollapsed ? "lg:pl-28" : "lg:pl-80")}>
         <Outlet />
       </main>
-      <NewBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} onCreate={handleBookingCreated} />
+      <NewBookingModal open={appointmentOpen} onClose={() => setAppointmentOpen(false)} onCreate={handleAppointmentCreated} />
       <AddPatientModal
         open={patientOpen}
         onClose={() => setPatientOpen(false)}

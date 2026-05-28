@@ -54,6 +54,7 @@ export function AddBranchModal({
     showToast({
       title: "Mock branch created",
       description: `${branch.name} has been added to the branch list.`,
+      variant: "success",
     });
     setForm(initialForm);
     onClose();

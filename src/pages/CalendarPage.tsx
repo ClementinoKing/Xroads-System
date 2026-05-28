@@ -76,12 +76,12 @@ export function CalendarPage() {
   const [branch, setBranch] = useState<FilterValue>("All");
   const [dentist, setDentist] = useState<FilterValue>("All");
   const [status, setStatus] = useState<AppointmentStatus | "All">("All");
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [bookingList, setBookingList] = useState<Appointment[]>(appointments);
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
+  const [appointmentList, setAppointmentList] = useState<Appointment[]>(appointments);
 
   const filteredAppointments = useMemo(
     () =>
-      bookingList
+      appointmentList
         .filter((appointment) => {
           const branchMatch = branch === "All" || appointment.branchId === branch;
           const dentistMatch = dentist === "All" || appointment.dentistId === dentist;
@@ -89,7 +89,7 @@ export function CalendarPage() {
           return branchMatch && dentistMatch && statusMatch;
         })
         .sort(sortAppointments),
-    [bookingList, branch, dentist, status],
+    [appointmentList, branch, dentist, status],
   );
 
   const range = useMemo(() => getViewRange(view, anchorDate), [view, anchorDate]);
@@ -138,13 +138,13 @@ export function CalendarPage() {
     const handleCreated = (event: Event) => {
       const customEvent = event as CustomEvent<Appointment>;
       if (!customEvent.detail?.id) return;
-      setBookingList((current) =>
+      setAppointmentList((current) =>
         current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
       );
     };
 
-    window.addEventListener(CREATED_EVENTS.booking, handleCreated);
-    return () => window.removeEventListener(CREATED_EVENTS.booking, handleCreated);
+    window.addEventListener(CREATED_EVENTS.appointment, handleCreated);
+    return () => window.removeEventListener(CREATED_EVENTS.appointment, handleCreated);
   }, []);
 
   return (
@@ -156,9 +156,9 @@ export function CalendarPage() {
             Real calendar scheduling with day, week, month, and year views for branch operations.
           </p>
         </div>
-        <Button onClick={() => setBookingOpen(true)}>
+        <Button onClick={() => setAppointmentOpen(true)}>
           <CirclePlus size={18} />
-          New booking
+          New appointment
         </Button>
       </div>
 
@@ -260,7 +260,7 @@ export function CalendarPage() {
         </CardContent>
       </Card>
 
-      <NewBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} onCreate={(booking) => setBookingList((current) => [booking, ...current])} />
+      <NewBookingModal open={appointmentOpen} onClose={() => setAppointmentOpen(false)} onCreate={(appointment) => setAppointmentList((current) => [appointment, ...current])} />
       <AgendaModal
         open={agendaOpen}
         date={anchorDate}
@@ -415,7 +415,7 @@ function WeekView({
                   {dayAppointments.length ? (
                     dayAppointments.slice(0, 5).map((appointment) => <CalendarChip key={appointment.id} appointment={appointment} />)
                   ) : (
-                    <div className="rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-400 dark:border-zinc-800">No bookings</div>
+                    <div className="rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-400 dark:border-zinc-800">No appointments</div>
                   )}
                   {dayAppointments.length > 5 ? (
                     <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-slate-400">

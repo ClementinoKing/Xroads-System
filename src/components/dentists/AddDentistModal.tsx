@@ -59,6 +59,7 @@ export function AddDentistModal({
     showToast({
       title: "Mock dentist created",
       description: `${dentist.name} has been added to the clinical team.`,
+      variant: "success",
     });
     setForm(initialForm);
     onClose();

@@ -19,10 +19,10 @@ export const roles: RoleDefinition[] = [
   {
     id: "ROLE-002",
     name: "Branch Admin",
-    description: "Manages branch operations, bookings, and local staff activity.",
+    description: "Manages branch operations, appointments, and local staff activity.",
     userCount: 1,
     accessLevel: "Full access",
-    permissions: ["Bookings", "Patients", "Calendar", "Branch view"],
+    permissions: ["Appointments", "Patients", "Calendar", "Branch view"],
   },
   {
     id: "ROLE-003",
@@ -30,7 +30,7 @@ export const roles: RoleDefinition[] = [
     description: "Handles front-desk scheduling and patient coordination.",
     userCount: 0,
     accessLevel: "Operational access",
-    permissions: ["Bookings", "Patients", "Calendar"],
+    permissions: ["Appointments", "Patients", "Calendar"],
   },
   {
     id: "ROLE-004",
@@ -38,7 +38,7 @@ export const roles: RoleDefinition[] = [
     description: "Accesses clinical schedules, appointments, and patient context.",
     userCount: 2,
     accessLevel: "Operational access",
-    permissions: ["Calendar", "Patients", "Booking details"],
+    permissions: ["Calendar", "Patients", "Appointment details"],
   },
   {
     id: "ROLE-005",

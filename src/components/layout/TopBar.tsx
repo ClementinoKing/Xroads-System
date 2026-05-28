@@ -17,13 +17,24 @@ import { branches } from "../../data/branches";
 import { Button } from "../ui/Button";
 import { cn } from "../../lib/utils";
 import { CREATE_EVENTS } from "../../lib/create-events";
+import { useAuth } from "../../features/auth/auth-context";
+import { getAuthDisplayName, getAuthRoleLabel } from "../../features/auth/use-auth-user";
 
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const createMenuRef = useRef<HTMLDivElement | null>(null);
   const controlHeight = "h-12";
+  const displayName = getAuthDisplayName(user, profile);
+  const roleLabel = getAuthRoleLabel(user, profile);
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "XH";
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -44,6 +55,14 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   function handleCreateAction(eventName: string) {
     setCreateOpen(false);
     window.dispatchEvent(new Event(eventName));
+  }
+
+  async function handleSignOut() {
+    setAccountOpen(false);
+    const { error } = await signOut();
+    if (!error) {
+      navigate("/", { replace: true });
+    }
   }
 
   return (
@@ -67,7 +86,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         </Button>
         {createOpen ? (
           <div className="absolute left-0 top-14 z-50 w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-950">
-            <MenuItem icon={CalendarPlus} label="Booking" onClick={() => handleCreateAction(CREATE_EVENTS.booking)} />
+            <MenuItem icon={CalendarPlus} label="Appointment" onClick={() => handleCreateAction(CREATE_EVENTS.appointment)} />
             <MenuItem icon={UserRound} label="Patient" onClick={() => handleCreateAction(CREATE_EVENTS.patient)} />
             <MenuItem icon={Stethoscope} label="Dentist" onClick={() => handleCreateAction(CREATE_EVENTS.dentist)} />
             <MenuItem icon={Building2} label="Branch" onClick={() => handleCreateAction(CREATE_EVENTS.branch)} />
@@ -99,21 +118,27 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             aria-label="Open account menu"
             aria-expanded={accountOpen}
           >
-            XH
+            {initials}
           </button>
           {accountOpen ? (
             <div className="absolute right-0 top-14 z-50 w-72 overflow-hidden rounded-md border border-slate-200 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-950">
               <div className="border-b border-slate-100 p-4 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-xroads-500 text-sm font-bold text-white">XH</div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-xroads-500 text-sm font-bold text-white">{initials}</div>
                   <div>
-                    <p className="font-semibold text-slate-950 dark:text-slate-50">Admin</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Super Admin</p>
+                    <p className="font-semibold text-slate-950 dark:text-slate-50">{displayName}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{roleLabel}</p>
                   </div>
                 </div>
               </div>
               <div className="p-2">
-                <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-900">
+                <button
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-900"
+                  onClick={() => {
+                    setAccountOpen(false);
+                    navigate("/profile");
+                  }}
+                >
                   <UserRound size={18} />
                   Account profile
                 </button>
@@ -121,7 +146,10 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   <Settings size={18} />
                   Account settings
                 </button>
-                <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40">
+                <button
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                  onClick={() => void handleSignOut()}
+                >
                   <LogOut size={18} />
                   Sign out
                 </button>

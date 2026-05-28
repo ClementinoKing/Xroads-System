@@ -46,7 +46,7 @@ export function BranchesPage() {
                 <Badge className="bg-emerald-50 text-emerald-700 ring-emerald-200">{branch.status}</Badge>
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <Metric label="Today's bookings" value={branchAppointments.length} />
+                <Metric label="Today's appointments" value={branchAppointments.length} />
                 <Metric label="Available dentists" value={dentists.filter((item) => item.branchId === branch.id && item.availability === "Available").length} />
                 <Metric label="Completed" value={branchAppointments.filter((item) => item.status === "Completed").length} />
                 <Metric label="Pending" value={branchAppointments.filter((item) => item.status === "Pending").length} />

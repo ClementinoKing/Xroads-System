@@ -22,7 +22,7 @@ export function BookingDetailModal({ booking, open, onClose }: { booking: Appoin
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-neutral-800">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">Booking detail</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">Appointment detail</p>
                 <StatusBadge status={booking.status} />
                 {booking.emergency ? (
                   <Badge className="bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/30 dark:text-rose-200 dark:ring-rose-900/60">
@@ -35,7 +35,7 @@ export function BookingDetailModal({ booking, open, onClose }: { booking: Appoin
                 {booking.service} · {booking.id}
               </p>
             </div>
-            <Button type="button" variant="outline" className="h-11 w-11 rounded-lg p-0" onClick={onClose} aria-label="Close booking detail modal">
+            <Button type="button" variant="outline" className="h-11 w-11 rounded-lg p-0" onClick={onClose} aria-label="Close appointment detail modal">
               <X size={28} strokeWidth={2.2} />
             </Button>
           </div>
@@ -78,7 +78,7 @@ export function BookingDetailModal({ booking, open, onClose }: { booking: Appoin
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{booking.notes || "No appointment notes were provided for this booking."}</p>
+                <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{booking.notes || "No appointment notes were provided for this appointment."}</p>
               </CardContent>
             </Card>
           </div>

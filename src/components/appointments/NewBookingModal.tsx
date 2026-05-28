@@ -62,7 +62,7 @@ export function NewBookingModal({
 
   function submitBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const serviceName = selectedService?.name ?? "Booking";
+    const serviceName = selectedService?.name ?? "Appointment";
     const booking: Appointment = {
       id: `APT-${Date.now().toString().slice(-4)}`,
       patientName: form.patientName.trim() || "Patient",
@@ -81,7 +81,7 @@ export function NewBookingModal({
 
     onCreate?.(booking);
     showToast({
-      title: "Mock booking created",
+      title: "Mock appointment created",
       description: `${booking.patientName} is scheduled for ${serviceName} at ${booking.time}.`,
     });
     setForm(initialForm);
@@ -103,11 +103,11 @@ export function NewBookingModal({
                 <CalendarPlus size={20} />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-950 dark:text-slate-50">New appointment booking</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Frontend-only booking form using mock clinic data.</p>
+                <h2 className="text-lg font-semibold text-slate-950 dark:text-slate-50">New appointment</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Frontend-only appointment form using mock clinic data.</p>
               </div>
             </div>
-            <Button type="button" variant="outline" className="h-11 w-11 rounded-lg p-0" onClick={onClose} aria-label="Close booking modal">
+            <Button type="button" variant="outline" className="h-11 w-11 rounded-lg p-0" onClick={onClose} aria-label="Close appointment modal">
               <X size={28} strokeWidth={2.2} />
             </Button>
           </div>
@@ -189,7 +189,7 @@ export function NewBookingModal({
             </div>
             <div className="border-t border-slate-100 p-5 dark:border-neutral-800">
               <Button type="submit" className="w-full sm:w-auto">
-                Create mock booking
+                Create mock appointment
               </Button>
             </div>
           </form>

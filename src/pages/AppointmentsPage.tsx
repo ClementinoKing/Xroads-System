@@ -26,16 +26,16 @@ const statusOptions: Array<AppointmentStatus | "All"> = [
   "Rescheduled",
 ];
 
-const bookingColumns: Array<DataTableColumn<Appointment>> = [
+const appointmentColumns: Array<DataTableColumn<Appointment>> = [
   {
-    key: "booking",
-    header: "Booking",
+    key: "appointment",
+    header: "Appointment",
     className: "font-semibold text-slate-950 dark:text-slate-50",
-    cell: (booking) => (
+    cell: (appointment) => (
       <>
-        <div>{booking.id}</div>
+        <div>{appointment.id}</div>
         <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-          {booking.date} at {booking.time}
+          {appointment.date} at {appointment.time}
         </div>
       </>
     ),
@@ -43,11 +43,11 @@ const bookingColumns: Array<DataTableColumn<Appointment>> = [
   {
     key: "patient",
     header: "Patient",
-    cell: (booking) => (
+    cell: (appointment) => (
       <>
-        <div className="font-semibold text-slate-950 dark:text-slate-50">{booking.patientName}</div>
-        <div className="text-slate-600 dark:text-slate-300">{booking.phone}</div>
-        <div className="mt-1 text-xs text-slate-400">{booking.service}</div>
+        <div className="font-semibold text-slate-950 dark:text-slate-50">{appointment.patientName}</div>
+        <div className="text-slate-600 dark:text-slate-300">{appointment.phone}</div>
+        <div className="mt-1 text-xs text-slate-400">{appointment.service}</div>
       </>
     ),
   },
@@ -55,21 +55,21 @@ const bookingColumns: Array<DataTableColumn<Appointment>> = [
     key: "branch",
     header: "Branch",
     className: "text-slate-600 dark:text-slate-300",
-    cell: (booking) => branches.find((item) => item.id === booking.branchId)?.name ?? "Branch",
+    cell: (appointment) => branches.find((item) => item.id === appointment.branchId)?.name ?? "Branch",
   },
   {
     key: "dentist",
     header: "Dentist",
     className: "text-slate-600 dark:text-slate-300",
-    cell: (booking) => dentists.find((item) => item.id === booking.dentistId)?.name ?? "Dentist",
+    cell: (appointment) => dentists.find((item) => item.id === appointment.dentistId)?.name ?? "Dentist",
   },
   {
     key: "status",
     header: "Status",
-    cell: (booking) => (
+    cell: (appointment) => (
       <>
-        <StatusBadge status={booking.status} />
-        {booking.emergency ? (
+        <StatusBadge status={appointment.status} />
+        {appointment.emergency ? (
           <div className="mt-2">
             <Badge className="bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/30 dark:text-rose-200 dark:ring-rose-900/60">Emergency</Badge>
           </div>
@@ -81,27 +81,27 @@ const bookingColumns: Array<DataTableColumn<Appointment>> = [
     key: "payment",
     header: "Payment",
     className: "text-slate-600 dark:text-slate-300",
-    cell: (booking) => (
+    cell: (appointment) => (
       <>
-        {booking.paymentType}
-        <div className="mt-1 text-xs text-slate-400">{booking.schemeName ?? "Direct payment"}</div>
+        {appointment.paymentType}
+        <div className="mt-1 text-xs text-slate-400">{appointment.schemeName ?? "Direct payment"}</div>
       </>
     ),
   },
 ];
 
-export function BookingPage() {
+export function AppointmentsPage() {
   const [search, setSearch] = useState("");
   const [branch, setBranch] = useState<BranchFilter>("All");
   const [status, setStatus] = useState<AppointmentStatus | "All">("All");
   const [open, setOpen] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const [bookingList, setBookingList] = useState<Appointment[]>(appointments);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const [appointmentList, setAppointmentList] = useState<Appointment[]>(appointments);
 
-  const filteredBookings = useMemo(() => {
+  const filteredAppointments = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return bookingList
+    return appointmentList
       .filter((appointment) => {
         const branchMatch = branch === "All" || appointment.branchId === branch;
         const statusMatch = status === "All" || appointment.status === status;
@@ -115,11 +115,11 @@ export function BookingPage() {
         return branchMatch && statusMatch && queryMatch;
       })
       .sort((left, right) => `${left.date}T${left.time}`.localeCompare(`${right.date}T${right.time}`));
-  }, [bookingList, branch, search, status]);
+  }, [appointmentList, branch, search, status]);
 
-  const selectedBooking = useMemo(
-    () => filteredBookings.find((booking) => booking.id === selectedBookingId) ?? null,
-    [filteredBookings, selectedBookingId],
+  const selectedAppointment = useMemo(
+    () => filteredAppointments.find((appointment) => appointment.id === selectedAppointmentId) ?? null,
+    [filteredAppointments, selectedAppointmentId],
   );
   const hasActiveFilters = search.trim() !== "" || branch !== "All" || status !== "All";
 
@@ -129,48 +129,48 @@ export function BookingPage() {
     setStatus("All");
   }
 
-  function createBooking(booking: Appointment) {
-    setBookingList((current) => [booking, ...current]);
+  function createAppointment(appointment: Appointment) {
+    setAppointmentList((current) => [appointment, ...current]);
   }
 
   useEffect(() => {
     const handleCreated = (event: Event) => {
       const customEvent = event as CustomEvent<Appointment>;
       if (!customEvent.detail?.id) return;
-      setBookingList((current) =>
+      setAppointmentList((current) =>
         current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
       );
     };
 
-    window.addEventListener(CREATED_EVENTS.booking, handleCreated);
-    return () => window.removeEventListener(CREATED_EVENTS.booking, handleCreated);
+    window.addEventListener(CREATED_EVENTS.appointment, handleCreated);
+    return () => window.removeEventListener(CREATED_EVENTS.appointment, handleCreated);
   }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
-          <h1 className="page-title">Bookings</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">All appointment bookings in a single operational table.</p>
+          <h1 className="page-title">Appointments</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">All appointments in a single operational table.</p>
         </div>
         <Button onClick={() => setOpen(true)}>
           <Plus size={18} />
-          Create booking
+          Create appointment
         </Button>
       </div>
 
       <Card>
         <CardHeader className="space-y-4 bg-slate-50/70 dark:bg-zinc-950">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-xroads-700 ring-1 ring-slate-200 dark:bg-zinc-900 dark:text-xroads-300 dark:ring-zinc-800">
-                <SlidersHorizontal size={18} />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-xroads-700 ring-1 ring-slate-200 dark:bg-zinc-900 dark:text-xroads-300 dark:ring-zinc-800">
+                  <SlidersHorizontal size={18} />
+                </div>
+                <div>
+                  <CardTitle>Search & filters</CardTitle>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{filteredAppointments.length} of {appointments.length} appointments shown</p>
+                </div>
               </div>
-              <div>
-                <CardTitle>Search & filters</CardTitle>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{filteredBookings.length} of {appointments.length} bookings shown</p>
-              </div>
-            </div>
             <Button type="button" variant="outline" className="h-10 w-full px-3 lg:w-auto" onClick={clearFilters} disabled={!hasActiveFilters}>
               <RotateCcw size={16} />
               Reset
@@ -212,19 +212,19 @@ export function BookingPage() {
         </CardHeader>
         <CardContent className="p-0">
           <DataTable
-            rows={filteredBookings}
-            columns={bookingColumns}
-            getRowKey={(booking) => booking.id}
+            rows={filteredAppointments}
+            columns={appointmentColumns}
+            getRowKey={(appointment) => appointment.id}
             minWidth="1020px"
-            emptyTitle="No bookings found"
+            emptyTitle="No appointments found"
             emptyDescription="Try a different search term, branch, or status filter."
-            onRowClick={(booking) => setSelectedBookingId(booking.id)}
+            onRowClick={(appointment) => setSelectedAppointmentId(appointment.id)}
           />
         </CardContent>
       </Card>
 
-      <NewBookingModal open={open} onClose={() => setOpen(false)} onCreate={createBooking} />
-      <BookingDetailModal open={Boolean(selectedBooking)} booking={selectedBooking} onClose={() => setSelectedBookingId(null)} />
+      <NewBookingModal open={open} onClose={() => setOpen(false)} onCreate={createAppointment} />
+      <BookingDetailModal open={Boolean(selectedAppointment)} booking={selectedAppointment} onClose={() => setSelectedAppointmentId(null)} />
     </div>
   );
 }

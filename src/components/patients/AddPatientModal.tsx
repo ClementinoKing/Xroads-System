@@ -64,6 +64,7 @@ export function AddPatientModal({
     showToast({
       title: "Mock patient created",
       description: `${patient.name} has been added to the patient list.`,
+      variant: "success",
     });
     setForm(initialForm);
     onClose();

@@ -484,7 +484,7 @@ export function SettingsPage() {
                   {
                     title: "Receptionist",
                     badge: "Front desk",
-                    description: "Handle bookings, patient intake, and day-to-day schedules.",
+                    description: "Handle appointments, patient intake, and day-to-day schedules.",
                   },
                   {
                     title: "Dentist",
@@ -540,7 +540,7 @@ export function SettingsPage() {
               {[
                 {
                   title: "Email notifications",
-                  description: "Send booking confirmations and schedule changes by email.",
+                  description: "Send appointment confirmations and schedule changes by email.",
                   checked: emailNotifications,
                   onCheckedChange: setEmailNotifications,
                 },

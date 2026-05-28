@@ -59,6 +59,7 @@ export function AddServiceModal({
     showToast({
       title: "Mock service created",
       description: `${service.name} has been added to the service catalog.`,
+      variant: "success",
     });
     setForm(initialForm);
     onClose();

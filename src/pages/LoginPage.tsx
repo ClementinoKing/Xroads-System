@@ -1,14 +1,42 @@
-import { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { LockKeyhole, Mail } from "lucide-react";
+import { FormEvent, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { LoaderCircle, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "../components/ui/Button";
+import { useAuth } from "../features/auth/auth-context";
+import { useToast } from "../components/shared/ToastProvider";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signInWithPassword } = useAuth();
+  const { showToast } = useToast();
+  const [email, setEmail] = useState("admin@xroads.health");
+  const [password, setPassword] = useState("password");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    navigate("/dashboard");
+    setIsSubmitting(true);
+
+    const { error } = await signInWithPassword({ email, password });
+
+    if (error) {
+      showToast({
+        title: "Login failed",
+        description: error,
+        variant: "error",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    showToast({
+      title: "Signed in",
+      description: "You are now logged in.",
+      variant: "success",
+    });
+    const nextPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? "/dashboard";
+    navigate(nextPath, { replace: true });
   }
 
   return (
@@ -30,19 +58,43 @@ export function LoginPage() {
                 <span className="label">Email address</span>
                 <span className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={17} />
-                  <input className="input pl-10" type="email" defaultValue="admin@xroads.health" required />
+                  <input
+                    className="input pl-10"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="email"
+                    required
+                  />
                 </span>
               </label>
               <label className="grid gap-1.5">
                 <span className="label">Password</span>
                 <span className="relative">
                   <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={17} />
-                  <input className="input pl-10" type="password" defaultValue="password" required />
+                  <input
+                    className="input pl-10"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
                 </span>
               </label>
-              <Button className="w-full" type="submit">
-                Login
+              <Button className="w-full" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <LoaderCircle size={16} className="animate-spin" />
+                    Signing in
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                Having trouble signing in? Contact your admin for help.
+              </p>
             </form>
           </div>
         </div>
@@ -54,15 +106,6 @@ export function LoginPage() {
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950/15 via-slate-950/10 to-xroads-500/20" />
-          <div className="absolute inset-x-0 bottom-0 p-8">
-            <div className="max-w-md rounded-2xl border border-white/20 bg-white/70 p-6 backdrop-blur-md shadow-lg">
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Welcome back</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">Manage your clinic with confidence.</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Secure access for the Xroads team, designed for a calm and efficient start to every day.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
     </main>

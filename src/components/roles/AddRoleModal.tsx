@@ -54,6 +54,7 @@ export function AddRoleModal({
       showToast({
         title: "Role already exists",
         description: "Use a different role name before creating this role.",
+        variant: "warning",
       });
       return;
     }
@@ -76,6 +77,7 @@ export function AddRoleModal({
     showToast({
       title: "Role created",
       description: `${role.name} is now available in the roles list.`,
+      variant: "success",
     });
     setForm(initialForm);
     onClose();
@@ -120,7 +122,7 @@ export function AddRoleModal({
               </select>
             </Field>
             <Field label="Permissions">
-              <input className="input" value={form.permissions} onChange={(event) => update("permissions", event.target.value)} placeholder="Bookings, Patients, Calendar" />
+              <input className="input" value={form.permissions} onChange={(event) => update("permissions", event.target.value)} placeholder="Appointments, Patients, Calendar" />
             </Field>
             <div className="flex flex-wrap gap-2">
               {form.permissions

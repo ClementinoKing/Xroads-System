@@ -1,5 +1,5 @@
 export const CREATE_EVENTS = {
-  booking: "xroads:create-booking",
+  appointment: "xroads:create-appointment",
   patient: "xroads:create-patient",
   dentist: "xroads:create-dentist",
   branch: "xroads:create-branch",
@@ -7,7 +7,7 @@ export const CREATE_EVENTS = {
 } as const;
 
 export const CREATED_EVENTS = {
-  booking: "xroads:created-booking",
+  appointment: "xroads:created-appointment",
   patient: "xroads:created-patient",
   dentist: "xroads:created-dentist",
   branch: "xroads:created-branch",

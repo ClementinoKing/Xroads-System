@@ -1,5 +1,6 @@
 import { addDays, format } from "date-fns";
 import type { BranchId } from "./branches";
+import type { RoleAppointmentMarker } from "../features/staff/role-types";
 
 export type AppointmentStatus = "Pending" | "Confirmed" | "Arrived" | "In Consultation" | "Completed" | "Cancelled" | "No-show" | "Rescheduled";
 
@@ -7,11 +8,20 @@ export type PaymentType = "Cash" | "Medical Scheme";
 
 export type Appointment = {
   id: string;
+  patientId?: string;
+  patientCode?: string;
   patientName: string;
   phone: string;
+  patientEmail?: string;
   branchId: BranchId;
   dentistId: string;
+  dentistName?: string;
+  dentistRole?: string;
+  dentistMarker?: RoleAppointmentMarker | null;
+  serviceId?: string;
+  serviceCode?: string;
   service: string;
+  durationMinutes?: number;
   date: string;
   time: string;
   status: AppointmentStatus;

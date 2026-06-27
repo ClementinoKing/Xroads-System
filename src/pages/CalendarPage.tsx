@@ -35,9 +35,8 @@ import {
   CirclePlus,
   X,
 } from "lucide-react";
-import { appointments, type Appointment, type AppointmentStatus } from "../data/appointments";
+import type { Appointment, AppointmentStatus } from "../data/appointments";
 import { branches } from "../data/branches";
-import { dentists } from "../data/dentists";
 import { NewBookingModal } from "../components/appointments/NewBookingModal";
 import { Badge, StatusBadge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
@@ -45,7 +44,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { EmptyState } from "../components/shared/EmptyState";
 import { FilterField } from "../components/shared/Filters";
 import { cn } from "../lib/utils";
-import { CREATED_EVENTS } from "../lib/create-events";
+import { useAppointments } from "../features/appointments/use-appointments";
+import { useDentists } from "../features/dentists/use-dentists";
 
 type CalendarView = "day" | "week" | "month" | "year";
 type FilterValue = "All" | string;
@@ -77,7 +77,8 @@ export function CalendarPage() {
   const [dentist, setDentist] = useState<FilterValue>("All");
   const [status, setStatus] = useState<AppointmentStatus | "All">("All");
   const [appointmentOpen, setAppointmentOpen] = useState(false);
-  const [appointmentList, setAppointmentList] = useState<Appointment[]>(appointments);
+  const { appointments: appointmentList, isLoading: isAppointmentsLoading, error: appointmentsError, refetch } = useAppointments();
+  const { dentists: dentistList, error: dentistsError } = useDentists();
 
   const filteredAppointments = useMemo(
     () =>
@@ -103,7 +104,8 @@ export function CalendarPage() {
   );
 
   const selectedBranch = branch === "All" ? "All branches" : branches.find((item) => item.id === branch)?.name ?? "All branches";
-  const selectedDentist = dentist === "All" ? "All dentists" : dentists.find((item) => item.id === dentist)?.name ?? "All dentists";
+  const selectedDentistSource = dentistList;
+  const selectedDentist = dentist === "All" ? "All dentists" : selectedDentistSource.find((item) => item.id === dentist)?.name ?? "All dentists";
 
   const periodLabel = getPeriodLabel(view, anchorDate);
 
@@ -133,19 +135,6 @@ export function CalendarPage() {
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [agendaOpen]);
-
-  useEffect(() => {
-    const handleCreated = (event: Event) => {
-      const customEvent = event as CustomEvent<Appointment>;
-      if (!customEvent.detail?.id) return;
-      setAppointmentList((current) =>
-        current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
-      );
-    };
-
-    window.addEventListener(CREATED_EVENTS.appointment, handleCreated);
-    return () => window.removeEventListener(CREATED_EVENTS.appointment, handleCreated);
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -188,6 +177,17 @@ export function CalendarPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {appointmentsError ? (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">
+              {appointmentsError}
+            </div>
+          ) : null}
+          {dentistsError ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              {dentistsError}
+            </div>
+          ) : null}
+
           <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="grid gap-4 xl:grid-cols-[1.05fr_1.05fr_1.05fr_auto] xl:items-end">
               <FilterField label="Branch">
@@ -203,7 +203,7 @@ export function CalendarPage() {
               <FilterField label="Dentist">
                 <select className="input" value={dentist} onChange={(event) => setDentist(event.target.value)}>
                   <option value="All">All dentists</option>
-                  {dentists.map((item) => (
+                  {selectedDentistSource.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
                     </option>
@@ -260,7 +260,16 @@ export function CalendarPage() {
         </CardContent>
       </Card>
 
-      <NewBookingModal open={appointmentOpen} onClose={() => setAppointmentOpen(false)} onCreate={(appointment) => setAppointmentList((current) => [appointment, ...current])} />
+      <NewBookingModal
+        open={appointmentOpen}
+        appointments={appointmentList}
+        appointmentsLoading={isAppointmentsLoading}
+        appointmentsError={appointmentsError}
+        onClose={() => setAppointmentOpen(false)}
+        onCreate={() => {
+          void refetch();
+        }}
+      />
       <AgendaModal
         open={agendaOpen}
         date={anchorDate}
@@ -593,7 +602,7 @@ function AgendaModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby="agenda-title"
-          className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-slate-200 bg-background shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
+          className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-background shadow-soft dark:border-neutral-800 dark:bg-neutral-900"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5 dark:border-neutral-800">
@@ -604,7 +613,7 @@ function AgendaModal({
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{appointments.length} appointments on this date</p>
             </div>
-            <Button variant="outline" className="h-11 w-11 rounded-lg p-0" onClick={onClose} aria-label="Close agenda modal">
+            <Button variant="outline" className="h-11 w-11 rounded-xl p-0" onClick={onClose} aria-label="Close agenda modal">
               <X size={28} strokeWidth={2.2} />
             </Button>
           </div>
@@ -645,7 +654,7 @@ function AgendaBookingCard({ appointment, index }: { appointment: Appointment; i
           {appointment.time} - {appointment.patientName}
         </p>
         <p className="truncate text-sm text-slate-500 dark:text-slate-400">
-          {appointment.service} with {dentists.find((item) => item.id === appointment.dentistId)?.name ?? "Dentist"}
+          {appointment.service} with {appointment.dentistName ?? "Dentist"}
         </p>
       </div>
       <div className="flex justify-start md:justify-end">

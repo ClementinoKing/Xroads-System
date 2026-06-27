@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LoaderCircle, LockKeyhole, Mail } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../features/auth/auth-context";
 import { useToast } from "../components/shared/ToastProvider";
@@ -10,9 +10,10 @@ export function LoginPage() {
   const location = useLocation();
   const { signInWithPassword } = useAuth();
   const { showToast } = useToast();
-  const [email, setEmail] = useState("admin@xroads.health");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,9 +41,9 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-white">
+    <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <section className="grid min-h-screen lg:grid-cols-[0.92fr_1.08fr]">
-        <div className="flex items-center justify-center px-6 py-10 sm:px-10 lg:px-14">
+        <div className="flex items-center justify-center bg-white px-6 py-10 dark:bg-zinc-950 sm:px-10 lg:px-14">
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
               <img
@@ -50,12 +51,12 @@ export function LoginPage() {
                 alt="Xroads"
                 className="mx-auto mb-4 h-12 w-auto max-w-[180px] object-contain sm:h-14"
               />
-              <p className="mt-1 text-sm font-medium text-xroads-600">Your Smile, Our Priority</p>
+              <p className="mt-1 text-sm font-medium text-xroads-600 dark:text-xroads-300">Your Smile, Our Priority</p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
               <label className="grid gap-1.5">
-                <span className="label">Email address</span>
+                <span className="label text-slate-600 dark:text-slate-300">Email address</span>
                 <span className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={17} />
                   <input
@@ -63,23 +64,32 @@ export function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    autoComplete="email"
+                    autoComplete="off"
                     required
                   />
                 </span>
               </label>
               <label className="grid gap-1.5">
-                <span className="label">Password</span>
+                <span className="label text-slate-600 dark:text-slate-300">Password</span>
                 <span className="relative">
                   <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={17} />
                   <input
-                    className="input pl-10"
-                    type="password"
+                    className="input px-10"
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     required
                   />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </span>
               </label>
               <Button className="w-full" type="submit" disabled={isSubmitting}>
@@ -105,7 +115,7 @@ export function LoginPage() {
             alt="Xroads login cover"
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/15 via-slate-950/10 to-xroads-500/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/15 via-slate-950/10 to-xroads-500/20 dark:from-zinc-950/30 dark:via-zinc-950/15 dark:to-xroads-500/35" />
         </div>
       </section>
     </main>

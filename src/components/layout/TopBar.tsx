@@ -6,10 +6,8 @@ import {
   CirclePlus,
   Building2,
   HeartPulse,
-  LogOut,
   Menu,
   Search,
-  Settings,
   Stethoscope,
   UserRound,
 } from "lucide-react";
@@ -17,24 +15,15 @@ import { branches } from "../../data/branches";
 import { Button } from "../ui/Button";
 import { cn } from "../../lib/utils";
 import { CREATE_EVENTS } from "../../lib/create-events";
-import { useAuth } from "../../features/auth/auth-context";
-import { getAuthDisplayName, getAuthRoleLabel } from "../../features/auth/use-auth-user";
+import { AccountMenu } from "./AccountMenu";
+import { useBranchScope } from "../../features/auth/branch-scope";
 
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
-  const [accountOpen, setAccountOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const createMenuRef = useRef<HTMLDivElement | null>(null);
   const controlHeight = "h-12";
-  const displayName = getAuthDisplayName(user, profile);
-  const roleLabel = getAuthRoleLabel(user, profile);
-  const initials = displayName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("") || "XH";
+  const branchScope = useBranchScope();
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -55,14 +44,6 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   function handleCreateAction(eventName: string) {
     setCreateOpen(false);
     window.dispatchEvent(new Event(eventName));
-  }
-
-  async function handleSignOut() {
-    setAccountOpen(false);
-    const { error } = await signOut();
-    if (!error) {
-      navigate("/", { replace: true });
-    }
   }
 
   return (
@@ -99,64 +80,32 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <input className="h-full flex-1 bg-transparent px-3 text-base text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200 dark:placeholder:text-slate-500" placeholder="Search patients, appointments, dentists" />
       </div>
       <div className="flex items-center justify-end gap-2.5">
-        <select className="input hidden h-12 w-56 rounded-md text-base lg:block" aria-label="Branch selector">
-          <option>All branches</option>
-          {branches.map((branch) => (
-            <option key={branch.id}>{branch.name}</option>
-          ))}
-        </select>
+        {branchScope.isBranchLocked ? (
+          <input
+            className="input hidden h-12 w-56 rounded-md text-base lg:block bg-slate-50 text-slate-600 dark:bg-zinc-900 dark:text-slate-300"
+            aria-label="Assigned branch"
+            value={branchScope.branchLabel}
+            readOnly
+          />
+        ) : (
+          <select
+            className="input hidden h-12 w-56 rounded-md text-base lg:block"
+            aria-label="Branch selector"
+            value={branchScope.branchId ?? ""}
+            onChange={(event) => branchScope.setBranchId(event.target.value || null)}
+          >
+            <option value="">All branches</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        )}
         <Button variant="outline" className={cn(controlHeight, "w-12 rounded-md p-0 text-slate-600 dark:text-slate-300")} aria-label="Notifications">
           <Bell size={22} strokeWidth={2.2} />
         </Button>
-        <div className="relative">
-          <button
-            className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full bg-xroads-500 text-sm font-bold text-white shadow-sm ring-4 ring-xroads-50 transition hover:bg-xroads-600",
-              accountOpen && "bg-xroads-600 ring-xroads-100",
-            )}
-            onClick={() => setAccountOpen((current) => !current)}
-            aria-label="Open account menu"
-            aria-expanded={accountOpen}
-          >
-            {initials}
-          </button>
-          {accountOpen ? (
-            <div className="absolute right-0 top-14 z-50 w-72 overflow-hidden rounded-md border border-slate-200 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-950">
-              <div className="border-b border-slate-100 p-4 dark:border-zinc-800">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-xroads-500 text-sm font-bold text-white">{initials}</div>
-                  <div>
-                    <p className="font-semibold text-slate-950 dark:text-slate-50">{displayName}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{roleLabel}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-2">
-                <button
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-900"
-                  onClick={() => {
-                    setAccountOpen(false);
-                    navigate("/profile");
-                  }}
-                >
-                  <UserRound size={18} />
-                  Account profile
-                </button>
-                <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-900">
-                  <Settings size={18} />
-                  Account settings
-                </button>
-                <button
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
-                  onClick={() => void handleSignOut()}
-                >
-                  <LogOut size={18} />
-                  Sign out
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <AccountMenu />
       </div>
     </div>
   );
@@ -172,7 +121,7 @@ function MenuItem({
   onClick: () => void;
 }) {
   return (
-      <button onClick={onClick} type="button" className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:bg-zinc-950 dark:text-slate-200 dark:hover:bg-zinc-900">
+    <button onClick={onClick} type="button" className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:bg-zinc-950 dark:text-slate-200 dark:hover:bg-zinc-900">
       <span className="flex h-9 w-9 items-center justify-center rounded-md bg-xroads-50 text-xroads-700 dark:bg-zinc-900 dark:text-xroads-200">
         <Icon size={18} />
       </span>

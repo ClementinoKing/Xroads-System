@@ -1,4 +1,5 @@
 import { useState, type ComponentType } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   Building2,
@@ -196,6 +197,7 @@ function SectionNavItem({
 }
 
 export function SettingsPage() {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSectionKey>("clinic-profile");
   const [clinicName, setClinicName] = useState("Xroads Health");
   const [primaryPhone, setPrimaryPhone] = useState("+265 123 456 789");
@@ -690,6 +692,21 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-xroads-50 via-white to-slate-50 p-5 dark:border-neutral-800 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-950">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">Administration</p>
+            <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">Medical schemes directory</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Manage the Malawi scheme list used when creating and editing patient records.
+            </p>
+          </div>
+          <Button type="button" onClick={() => navigate("/settings/medical-schemes")}>
+            Open manager
+          </Button>
+        </div>
+      </div>
+
       <div
         className="w-full"
         style={{

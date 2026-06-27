@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { format, isValid, parseISO } from "date-fns";
-import { ChevronDownIcon } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./Button";
 import { Calendar } from "./calendar";
@@ -39,10 +39,10 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
           variant="outline"
           disabled={disabled}
           data-empty={!selectedDate}
-          className={cn("w-full justify-between text-left font-normal data-[empty=true]:text-slate-400", className)}
+          className={cn("w-full justify-start text-left font-normal data-[empty=true]:text-slate-400", className)}
         >
+          <CalendarIcon size={16} className="shrink-0" />
           {selectedDate ? format(selectedDate, "PPP") : <span>{placeholder}</span>}
-          <ChevronDownIcon size={16} className="shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="z-[100] w-auto border-0 bg-transparent p-0 shadow-none" align="start">

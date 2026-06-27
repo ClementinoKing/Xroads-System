@@ -61,9 +61,9 @@ export function AddBranchModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/35 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-neutral-900"
+        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-neutral-900"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-neutral-800">
@@ -76,7 +76,7 @@ export function AddBranchModal({
               <p className="text-sm text-slate-500 dark:text-slate-400">Add a new clinic branch to the mock directory.</p>
             </div>
           </div>
-          <Button type="button" variant="outline" className="h-11 w-11 rounded-lg p-0" onClick={onClose} aria-label="Close create branch modal">
+          <Button type="button" variant="outline" className="h-11 w-11 rounded-xl p-0" onClick={onClose} aria-label="Close create branch modal">
             <X size={28} strokeWidth={2.2} />
           </Button>
         </div>

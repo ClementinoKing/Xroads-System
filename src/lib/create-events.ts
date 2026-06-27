@@ -14,4 +14,8 @@ export const CREATED_EVENTS = {
   service: "xroads:created-service",
 } as const;
 
+export const UPDATED_EVENTS = {
+  appointment: "xroads:updated-appointment",
+} as const;
+
 export type CreateEventKey = keyof typeof CREATE_EVENTS;

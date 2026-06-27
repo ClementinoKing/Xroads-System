@@ -2,6 +2,7 @@ import type { BranchId } from "./branches";
 
 export type Patient = {
   id: string;
+  patientCode?: string;
   name: string;
   phone: string;
   email?: string;

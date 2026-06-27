@@ -23,12 +23,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed right-4 top-4 z-50 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3">
+      <div className="pointer-events-none fixed right-4 top-4 z-[100000] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3">
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={cn(
-              "rounded-lg border p-4 shadow-soft backdrop-blur-sm",
+              "pointer-events-auto rounded-lg border p-4 shadow-soft backdrop-blur-sm",
               toast.variant === "error"
                 ? "border-rose-200 bg-rose-50/95 dark:border-rose-900/50 dark:bg-rose-950/35"
                 : toast.variant === "warning"

@@ -1,14 +1,15 @@
 import { AlertTriangle, Clock, MapPin, UserRound } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import type { Appointment } from "../../data/appointments";
 import { branches } from "../../data/branches";
-import { dentists } from "../../data/dentists";
-import { StatusBadge } from "../ui/Badge";
+import { Badge, StatusBadge } from "../ui/Badge";
 import { cn } from "../../lib/utils";
+import { getBranchBadgeClass } from "../../lib/branch-badges";
 
 export function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const branch = branches.find((item) => item.id === appointment.branchId);
-  const dentist = dentists.find((item) => item.id === appointment.dentistId);
+  const parsedDate = parseISO(appointment.date);
+  const dateLabel = isValid(parsedDate) ? format(parsedDate, "MMM d") : "Unknown date";
 
   return (
     <article className={cn("rounded-lg border bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950", appointment.emergency ? "border-rose-200 ring-4 ring-rose-50" : "border-slate-200")}>
@@ -27,9 +28,20 @@ export function AppointmentCard({ appointment }: { appointment: Appointment }) {
         <StatusBadge status={appointment.status} />
       </div>
       <div className="mt-4 grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-        <span className="flex items-center gap-2"><Clock size={15} /> {format(parseISO(appointment.date), "MMM d")} at {appointment.time}</span>
-        <span className="flex items-center gap-2"><MapPin size={15} /> {branch?.name}</span>
-        <span className="flex items-center gap-2"><UserRound size={15} /> {dentist?.name}</span>
+        <span className="flex items-center gap-2"><Clock size={15} /> {dateLabel} at {appointment.time}</span>
+        <span className="flex items-center gap-2">
+          <MapPin size={15} />
+          <Badge className={`${getBranchBadgeClass(branch?.name)} px-2 py-0.5 text-[11px] font-semibold`}>
+            {branch?.name}
+          </Badge>
+        </span>
+        <span className="flex items-center gap-2">
+          <UserRound size={15} />
+          <span className="min-w-0 truncate">
+            {appointment.dentistName ?? "Assigned dentist"}
+            {appointment.dentistRole ? <span className="text-slate-400"> · {appointment.dentistRole}</span> : null}
+          </span>
+        </span>
         <span>{appointment.paymentType}{appointment.schemeName ? ` - ${appointment.schemeName}` : ""}</span>
       </div>
     </article>

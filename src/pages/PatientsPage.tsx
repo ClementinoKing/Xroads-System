@@ -1,95 +1,49 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { CircleAlert, PenSquare, Plus, RotateCcw, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import { branches } from "../data/branches";
-import { patients, type Patient } from "../data/patients";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
-import { DataTable, type DataTableColumn } from "../components/shared/DataTable";
+import { DataTable } from "../components/shared/DataTable";
 import { FilterField } from "../components/shared/Filters";
 import { AddPatientModal } from "../components/patients/AddPatientModal";
+import { ConfirmDeletePatientModal } from "../components/patients/ConfirmDeletePatientModal";
 import { PatientDetailModal } from "../components/patients/PatientDetailModal";
-import { CREATED_EVENTS } from "../lib/create-events";
+import { IconButton } from "../components/ui/IconButton";
+import { usePatients } from "../features/patients/use-patients";
+import { deletePatientRecord } from "../features/patients/patients-service";
+import type { Patient } from "../data/patients";
+import { getFriendlyPalette } from "../lib/color-palettes";
 
 type BranchFilter = "All" | string;
 
-const patientColumns: Array<DataTableColumn<Patient>> = [
-  {
-    key: "patient",
-    header: "Patient",
-    cell: (patient) => (
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-xroads-500 text-sm font-bold text-white">
-          {patient.name.slice(0, 2).toUpperCase()}
-        </div>
-        <div>
-          <div className="font-semibold text-slate-950 dark:text-slate-50">{patient.name}</div>
-          <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-400">{patient.id}</div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: "contact",
-    header: "Contact",
-    cell: (patient) => (
-      <>
-        <div className="font-medium text-slate-700 dark:text-slate-200">{patient.phone}</div>
-        <div className="mt-1 text-xs text-slate-400">{patient.email ?? "No email provided"}</div>
-      </>
-    ),
-  },
-  {
-    key: "branch",
-    header: "Branch",
-    className: "text-slate-600 dark:text-slate-300",
-    cell: (patient) => branches.find((item) => item.id === patient.branchId)?.name ?? "Branch",
-  },
-  {
-    key: "lastVisit",
-    header: "Last visit",
-    className: "text-slate-600 dark:text-slate-300",
-    cell: (patient) => patient.lastVisit,
-  },
-  {
-    key: "nextAppointment",
-    header: "Next appointment",
-    className: "text-slate-600 dark:text-slate-300",
-    cell: (patient) => patient.nextAppointment,
-  },
-  {
-    key: "payment",
-    header: "Payment",
-    cell: (patient) => (
-      <Badge className="bg-slate-100 text-slate-700 ring-slate-200 dark:bg-zinc-900 dark:text-slate-200 dark:ring-zinc-700">
-        {patient.schemeName ?? patient.paymentMethod}
-      </Badge>
-    ),
-  },
-];
-
 export function PatientsPage() {
-  const [patientList, setPatientList] = useState<Patient[]>(patients);
+  const { patients, isLoading, error, refetch } = usePatients();
   const [search, setSearch] = useState("");
   const [branch, setBranch] = useState<BranchFilter>("All");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Patient | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredPatients = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return patientList.filter((patient) => {
+    return patients.filter((patient) => {
       const branchMatch = branch === "All" || patient.branchId === branch;
       const queryMatch =
         !query ||
-        [patient.name, patient.phone, patient.email ?? "", patient.paymentMethod, patient.schemeName ?? ""]
+        [patient.patientCode ?? "", patient.name, patient.phone, patient.email ?? "", patient.paymentMethod, patient.schemeName ?? ""]
           .join(" ")
           .toLowerCase()
           .includes(query);
 
       return branchMatch && queryMatch;
     });
-  }, [branch, patientList, search]);
+  }, [branch, patients, search]);
 
   const selectedPatient = useMemo(
     () => filteredPatients.find((patient) => patient.id === selectedPatientId) ?? null,
@@ -97,27 +51,38 @@ export function PatientsPage() {
   );
   const hasActiveFilters = search.trim() !== "" || branch !== "All";
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, branch]);
+
   function clearFilters() {
     setSearch("");
     setBranch("All");
   }
 
-  function createPatient(patient: Patient) {
-    setPatientList((current) => [patient, ...current]);
+  async function handleDeletePatient() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const result = await deletePatientRecord(deleteTarget.id);
+
+      if (result.error || !result.data) {
+        return;
+      }
+
+      if (selectedPatientId === deleteTarget.id) {
+        setSelectedPatientId(null);
+      }
+      setDeleteTarget(null);
+      refetch();
+    } finally {
+      setIsDeleting(false);
+    }
   }
-
-  useEffect(() => {
-    const handleCreated = (event: Event) => {
-      const customEvent = event as CustomEvent<Patient>;
-      if (!customEvent.detail?.id) return;
-      setPatientList((current) =>
-        current.some((item) => item.id === customEvent.detail.id) ? current : [customEvent.detail, ...current],
-      );
-    };
-
-    window.addEventListener(CREATED_EVENTS.patient, handleCreated);
-    return () => window.removeEventListener(CREATED_EVENTS.patient, handleCreated);
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -126,7 +91,7 @@ export function PatientsPage() {
           <h1 className="page-title">Patients</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Search patients, review upcoming appointments, and payment preference.</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button type="button" onClick={() => setCreateOpen(true)}>
           <Plus size={18} />
           Create patient
         </Button>
@@ -142,7 +107,7 @@ export function PatientsPage() {
               <div>
                 <CardTitle>Search & filters</CardTitle>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {filteredPatients.length} of {patientList.length} patients shown
+                  {filteredPatients.length} of {patients.length} patients shown
                 </p>
               </div>
             </div>
@@ -177,20 +142,171 @@ export function PatientsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <DataTable
-            rows={filteredPatients}
-            columns={patientColumns}
-            getRowKey={(patient) => patient.id}
-            minWidth="980px"
-            emptyTitle="No patients found"
-            emptyDescription="Try a different search term or branch filter."
-            onRowClick={(patient) => setSelectedPatientId(patient.id)}
-          />
+          {isLoading ? (
+            <PatientsTableSkeleton />
+          ) : error ? (
+            <PatientsErrorState message={error} onRetry={refetch} />
+          ) : (
+            <DataTable
+              rows={filteredPatients}
+              columns={[
+                {
+                  key: "patient",
+                  header: "Patient",
+                  cell: (patient) => (
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${getFriendlyPalette(patient.id).avatar}`}>
+                        {patient.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-950 dark:text-slate-50">{patient.name}</div>
+                        <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-400">{patient.patientCode ?? patient.id}</div>
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: "contact",
+                  header: "Contact",
+                  cell: (patient) => (
+                    <>
+                      <div className="font-medium text-slate-700 dark:text-slate-200">{patient.phone}</div>
+                      <div className="mt-1 text-xs text-slate-400">{patient.email ?? "No email provided"}</div>
+                    </>
+                  ),
+                },
+                {
+                  key: "branch",
+                  header: "Branch",
+                  className: "text-slate-600 dark:text-slate-300",
+                  cell: (patient) => branches.find((item) => item.id === patient.branchId)?.name ?? "Branch",
+                },
+                {
+                  key: "lastVisit",
+                  header: "Last visit",
+                  className: "text-slate-600 dark:text-slate-300",
+                  cell: (patient) => patient.lastVisit,
+                },
+                {
+                  key: "nextAppointment",
+                  header: "Next appointment",
+                  className: "text-slate-600 dark:text-slate-300",
+                  cell: (patient) => patient.nextAppointment,
+                },
+                {
+                  key: "payment",
+                  header: "Payment",
+                  cell: (patient) => (
+                    <Badge className="bg-slate-100 text-slate-700 ring-slate-200 dark:bg-zinc-900 dark:text-slate-200 dark:ring-zinc-700">
+                      {patient.schemeName ?? patient.paymentMethod}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  className: "w-40",
+                  cell: (patient) => (
+                    <div className="flex flex-wrap gap-2">
+                      <IconButton icon={<PenSquare size={18} />} label={`Edit ${patient.name}`} onClick={() => setEditTarget(patient)} />
+                      <IconButton icon={<Trash2 size={18} />} label={`Delete ${patient.name}`} onClick={() => setDeleteTarget(patient)} />
+                    </div>
+                  ),
+                },
+              ]}
+              getRowKey={(patient) => patient.id}
+              minWidth="980px"
+              emptyTitle="No patients found"
+              emptyDescription="Try a different search term or branch filter."
+              onRowClick={(patient) => setSelectedPatientId(patient.id)}
+              pagination={{
+                page,
+                pageSize,
+                onPageChange: setPage,
+                onPageSizeChange: (nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  setPage(1);
+                },
+                pageSizeOptions: [10, 20, 50],
+                itemLabel: "patients",
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
-      <AddPatientModal open={createOpen} onClose={() => setCreateOpen(false)} onCreate={createPatient} />
+      <AddPatientModal
+        open={createOpen || editTarget !== null}
+        patient={editTarget}
+        onClose={() => {
+          setCreateOpen(false);
+          setEditTarget(null);
+        }}
+        onSaved={() => {
+          void refetch();
+        }}
+      />
+      <ConfirmDeletePatientModal
+        open={deleteTarget !== null}
+        patient={deleteTarget}
+        isDeleting={isDeleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          void handleDeletePatient();
+        }}
+      />
       <PatientDetailModal open={Boolean(selectedPatient)} patient={selectedPatient} onClose={() => setSelectedPatientId(null)} />
+    </div>
+  );
+}
+
+function PatientsErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="flex min-h-64 flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="rounded-full bg-rose-50 p-3 text-rose-700 dark:bg-zinc-900 dark:text-rose-300">
+        <CircleAlert size={22} />
+      </div>
+      <div className="max-w-md space-y-1">
+        <h3 className="text-sm font-semibold text-slate-950 dark:text-slate-50">Patients could not be loaded</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{message}</p>
+      </div>
+      <Button type="button" variant="outline" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
+  );
+}
+
+function PatientsTableSkeleton() {
+  return (
+    <div className="space-y-0">
+      <div className="grid grid-cols-[1.4fr_0.95fr_0.8fr_0.8fr_0.8fr_0.7fr] border-b border-slate-100 px-5 py-3 text-xs uppercase text-slate-400 dark:border-zinc-800 dark:text-slate-500">
+        <span>Patient</span>
+        <span>Contact</span>
+        <span>Branch</span>
+        <span>Last visit</span>
+        <span>Next appointment</span>
+        <span>Payment</span>
+      </div>
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="grid animate-pulse grid-cols-[1.4fr_0.95fr_0.8fr_0.8fr_0.8fr_0.7fr] items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-b-0 dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-zinc-800" />
+            <div className="space-y-2">
+              <div className="h-4 w-36 rounded bg-slate-100 dark:bg-zinc-800" />
+              <div className="h-3 w-24 rounded bg-slate-100 dark:bg-zinc-800" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-28 rounded bg-slate-100 dark:bg-zinc-800" />
+            <div className="h-3 w-24 rounded bg-slate-100 dark:bg-zinc-800" />
+          </div>
+          <div className="h-4 w-24 rounded bg-slate-100 dark:bg-zinc-800" />
+          <div className="h-4 w-24 rounded bg-slate-100 dark:bg-zinc-800" />
+          <div className="h-4 w-28 rounded bg-slate-100 dark:bg-zinc-800" />
+          <div className="h-8 w-24 rounded-full bg-slate-100 dark:bg-zinc-800" />
+        </div>
+      ))}
     </div>
   );
 }

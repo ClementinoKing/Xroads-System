@@ -30,3 +30,22 @@ export function PublicOnlyRoute() {
 
   return <Outlet />;
 }
+
+export function RequireAdminAccess() {
+  const { isLoading, session, profile } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!session) {
+    return <Navigate to="/" replace state={{ from: location }} />;
+  }
+
+  if (!profile || !["super_admin", "branch_admin"].includes(profile.role_id)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />;
+}

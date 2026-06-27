@@ -10,10 +10,11 @@ import { AddBranchModal } from "../branches/AddBranchModal";
 import { AddServiceModal } from "../services/AddServiceModal";
 import { CREATE_EVENTS, CREATED_EVENTS } from "../../lib/create-events";
 import type { Patient } from "../../data/patients";
-import type { Dentist } from "../../data/dentists";
 import type { Appointment } from "../../data/appointments";
 import type { Branch } from "../../data/branches";
 import type { DentalService } from "../../data/services";
+import type { StaffUser } from "../../features/staff/staff-directory-service";
+import { BranchScopeProvider } from "../../features/auth/branch-scope";
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -68,7 +69,7 @@ export function AppLayout() {
     window.dispatchEvent(new CustomEvent(CREATED_EVENTS.patient, { detail: patient }));
   }
 
-  function handleDentistCreated(dentist: Dentist) {
+  function handleDentistCreated(dentist: StaffUser) {
     window.dispatchEvent(new CustomEvent(CREATED_EVENTS.dentist, { detail: dentist }));
   }
 
@@ -85,29 +86,31 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
-        <div className="flex h-20 w-full items-center px-4 sm:px-6 lg:px-8">
-          <TopBar key={location.pathname} onMenuClick={handleMenuClick} />
-        </div>
-      </header>
-      <Sidebar open={sidebarOpen} collapsed={sidebarCollapsed} onClose={() => setSidebarOpen(false)} />
-      <main className={cn("px-4 py-6 transition-[padding] sm:px-6 lg:px-8", sidebarCollapsed ? "lg:pl-28" : "lg:pl-80")}>
-        <Outlet />
-      </main>
-      <NewBookingModal open={appointmentOpen} onClose={() => setAppointmentOpen(false)} onCreate={handleAppointmentCreated} />
-      <AddPatientModal
-        open={patientOpen}
-        onClose={() => setPatientOpen(false)}
-        onCreate={(patient) => handlePatientCreated(patient)}
-      />
-      <AddDentistModal
-        open={dentistOpen}
-        onClose={() => setDentistOpen(false)}
-        onCreate={(dentist) => handleDentistCreated(dentist)}
-      />
-      <AddBranchModal open={branchOpen} onClose={() => setBranchOpen(false)} onCreate={handleBranchCreated} />
-      <AddServiceModal open={serviceOpen} onClose={() => setServiceOpen(false)} onCreate={handleServiceCreated} />
-    </div>
+    <BranchScopeProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
+          <div className="flex h-20 w-full items-center px-4 sm:px-6 lg:px-8">
+            <TopBar key={location.pathname} onMenuClick={handleMenuClick} />
+          </div>
+        </header>
+        <Sidebar open={sidebarOpen} collapsed={sidebarCollapsed} onClose={() => setSidebarOpen(false)} />
+        <main className={cn("px-4 py-6 transition-[padding] sm:px-6 lg:px-8", sidebarCollapsed ? "lg:pl-28" : "lg:pl-80")}>
+          <Outlet />
+        </main>
+        <NewBookingModal open={appointmentOpen} onClose={() => setAppointmentOpen(false)} onCreate={handleAppointmentCreated} />
+        <AddPatientModal
+          open={patientOpen}
+          onClose={() => setPatientOpen(false)}
+          onSaved={(patient) => handlePatientCreated(patient)}
+        />
+        <AddDentistModal
+          open={dentistOpen}
+          onClose={() => setDentistOpen(false)}
+          onCreate={(dentist) => handleDentistCreated(dentist)}
+        />
+        <AddBranchModal open={branchOpen} onClose={() => setBranchOpen(false)} onCreate={handleBranchCreated} />
+        <AddServiceModal open={serviceOpen} onClose={() => setServiceOpen(false)} onSaved={(service) => handleServiceCreated(service)} />
+      </div>
+    </BranchScopeProvider>
   );
 }

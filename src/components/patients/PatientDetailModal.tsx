@@ -15,9 +15,9 @@ export function PatientDetailModal({ patient, open, onClose }: { patient: Patien
   const paymentLabel = patient.schemeName ?? patient.paymentMethod;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-slate-950/35 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] bg-slate-950/50 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="mx-auto flex h-full w-full max-w-4xl items-center" onClick={(event) => event.stopPropagation()}>
-        <div className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-neutral-900">
+        <div className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-neutral-900">
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-neutral-800">
             <div className="flex min-w-0 items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-xroads-500 text-lg font-bold text-white">
@@ -27,12 +27,14 @@ export function PatientDetailModal({ patient, open, onClose }: { patient: Patien
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">Patient detail</p>
                 <h2 className="mt-1 text-2xl font-semibold text-slate-950 dark:text-slate-50">{patient.name}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge className="bg-xroads-50 text-xroads-700 ring-xroads-200 dark:bg-zinc-900 dark:text-xroads-200 dark:ring-zinc-700">{patient.id}</Badge>
+                  <Badge className="bg-xroads-50 text-xroads-700 ring-xroads-200 dark:bg-zinc-900 dark:text-xroads-200 dark:ring-zinc-700">
+                    {patient.patientCode ?? patient.id}
+                  </Badge>
                   <Badge className="bg-slate-100 text-slate-700 ring-slate-200 dark:bg-zinc-900 dark:text-slate-200 dark:ring-zinc-700">{paymentLabel}</Badge>
                 </div>
               </div>
             </div>
-            <Button type="button" variant="outline" className="h-11 w-11 shrink-0 rounded-lg p-0" onClick={onClose} aria-label="Close patient detail modal">
+            <Button type="button" variant="outline" className="h-11 w-11 shrink-0 rounded-xl p-0" onClick={onClose} aria-label="Close patient detail modal">
               <X size={28} strokeWidth={2.2} />
             </Button>
           </div>

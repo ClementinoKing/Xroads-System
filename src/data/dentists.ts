@@ -1,9 +1,11 @@
 import type { BranchId } from "./branches";
+import type { RoleAppointmentMarker } from "../features/staff/role-types";
 
 export type Dentist = {
   id: string;
   name: string;
   role: string;
+  appointmentMarker?: RoleAppointmentMarker | null;
   branchId: BranchId;
   availability: "Available" | "In consultation" | "Off duty";
   todayAppointments: number;

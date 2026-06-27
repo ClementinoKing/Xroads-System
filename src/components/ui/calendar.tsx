@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday, startOfMonth, startOfWeek, subMonths } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./Button";
 
@@ -36,20 +36,20 @@ export function Calendar({ mode, selected, onSelect, defaultMonth, className }: 
           <Button
             type="button"
             variant="outline"
-            className="h-9 w-9 shrink-0 rounded-md px-0"
+            className="h-11 w-11 shrink-0 rounded-md px-0"
             onClick={() => setMonth((current) => subMonths(current, 1))}
             aria-label="Previous month"
           >
-            <ChevronLeft size={16} />
+            <ArrowLeft size={24} strokeWidth={2.8} className="text-slate-600 dark:text-slate-300" />
           </Button>
           <Button
             type="button"
             variant="outline"
-            className="h-9 w-9 shrink-0 rounded-md px-0"
+            className="h-11 w-11 shrink-0 rounded-md px-0"
             onClick={() => setMonth((current) => addMonths(current, 1))}
             aria-label="Next month"
           >
-            <ChevronRight size={16} />
+            <ArrowRight size={24} strokeWidth={2.8} className="text-slate-600 dark:text-slate-300" />
           </Button>
         </div>
       </div>

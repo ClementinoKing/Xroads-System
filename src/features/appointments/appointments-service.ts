@@ -72,6 +72,10 @@ function toFriendlyError(message: string) {
     return "You do not have permission to view or edit appointment records.";
   }
 
+  if (/not a dentist role|is not a dentist/i.test(message)) {
+    return "The selected clinician must have an appointment marker of Dentist before bookings can be created.";
+  }
+
   if (/relation .* does not exist/i.test(message) || /could not find the table/i.test(message)) {
     return "The appointments table is missing from Supabase. Apply the appointments migration first.";
   }

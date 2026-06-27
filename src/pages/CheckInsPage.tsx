@@ -183,10 +183,10 @@ export function CheckInsPage() {
                 <Badge className={`${getBranchBadgeClass(branchName)} px-2 py-0.5 text-[11px] font-semibold`}>
                   {branchName}
                 </Badge>
-                <Badge className="bg-white px-2 py-0.5 text-[11px] text-slate-700 ring-slate-200 dark:bg-zinc-950 dark:text-slate-200 dark:ring-zinc-800">
+                <Badge className="bg-xroads-50 px-2 py-0.5 text-[11px] text-xroads-700 ring-xroads-200 dark:bg-xroads-500/10 dark:text-xroads-100 dark:ring-xroads-900/50">
                   {actionableCount} ready
                 </Badge>
-                <Badge className="bg-white px-2 py-0.5 text-[11px] text-slate-700 ring-slate-200 dark:bg-zinc-950 dark:text-slate-200 dark:ring-zinc-800">
+                <Badge className="bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-100 dark:ring-sky-900/50">
                   {bookedCount} booked
                 </Badge>
               </div>

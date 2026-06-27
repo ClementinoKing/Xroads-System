@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type MutableRefObject, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { addDays, addMinutes, format, isSameDay, isValid, parseISO } from "date-fns";
-import { AlertTriangle, ArrowLeft, ArrowRight, BadgeCheck, CalendarClock, Clock3, LayoutGrid, Plus } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Clock3, LayoutGrid, Plus, Table2 } from "lucide-react";
 import type { Appointment, AppointmentStatus } from "../data/appointments";
 import { branches } from "../data/branches";
 import type { Dentist } from "../data/dentists";
 import { BookingDetailModal } from "../components/appointments/BookingDetailModal";
+import { AppointmentTableView } from "../components/appointments/AppointmentTableView";
 import { ConfirmDeleteAppointmentModal } from "../components/appointments/ConfirmDeleteAppointmentModal";
 import { NewBookingModal, type NewBookingInitialValues } from "../components/appointments/NewBookingModal";
 import { Badge, StatusBadge } from "../components/ui/Badge";
@@ -17,12 +18,11 @@ import { useToast } from "../components/shared/ToastProvider";
 import { cn } from "../lib/utils";
 import { getBranchBadgeClass } from "../lib/branch-badges";
 import { normalizeTimeString } from "../lib/time";
-import { deleteAppointmentRecord, updateAppointmentRecord, updateAppointmentStatus } from "../features/appointments/appointments-service";
+import { deleteAppointmentRecord, updateAppointmentRecord } from "../features/appointments/appointments-service";
 import { useAppointments } from "../features/appointments/use-appointments";
 import { useDentists } from "../features/dentists/use-dentists";
 import { UPDATED_EVENTS } from "../lib/create-events";
 import { useBranchScope } from "../features/auth/branch-scope";
-import { CheckInTableView } from "../components/appointments/CheckInTableView";
 import {
   DEFAULT_WORKDAY_END,
   DEFAULT_WORKDAY_START,
@@ -79,7 +79,7 @@ export function AppointmentsPage() {
   const branchScope = useBranchScope();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [status, setStatus] = useState<AppointmentStatus | "All">("All");
-  const [viewMode, setViewMode] = useState<"slots" | "queue">("slots");
+  const [viewMode, setViewMode] = useState<"slots" | "table">("slots");
   const [createOpen, setCreateOpen] = useState(false);
   const [createSeed, setCreateSeed] = useState<NewBookingInitialValues | undefined>(undefined);
   const [editTarget, setEditTarget] = useState<Appointment | null>(null);
@@ -88,7 +88,6 @@ export function AppointmentsPage() {
   const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
   const [appointmentPreview, setAppointmentPreview] = useState<AppointmentPreview | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [updatingAppointmentId, setUpdatingAppointmentId] = useState<string | null>(null);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
   const [dragSession, setDragSession] = useState<DragSession | null>(null);
   const { showToast } = useToast();
@@ -256,7 +255,7 @@ export function AppointmentsPage() {
 
   function handleAppointmentCreated() {
     void refetch();
-    setViewMode("queue");
+    setViewMode("table");
   }
 
   function handleAppointmentUpdated() {
@@ -270,41 +269,6 @@ export function AppointmentsPage() {
 
   function handleDeleteAppointment(appointment: Appointment) {
     setDeleteTarget(appointment);
-  }
-
-  async function handleQueueAdvance(appointment: Appointment, nextStatus: AppointmentStatus) {
-    if (updatingAppointmentId) {
-      return;
-    }
-
-    setUpdatingAppointmentId(appointment.id);
-
-    try {
-      const result = await updateAppointmentStatus({
-        appointmentCode: appointment.id,
-        status: nextStatus,
-      });
-
-      if (result.error || !result.data) {
-        showToast({
-          title: "Could not update check-in status",
-          description: result.error ?? "We could not move the appointment to the next stage.",
-          variant: "error",
-        });
-        return;
-      }
-
-      window.dispatchEvent(new CustomEvent(UPDATED_EVENTS.appointment, { detail: result.data }));
-      void refetch();
-
-      showToast({
-        title: queueStatusToastTitle(nextStatus),
-        description: `${result.data.patientName} is now ${queueStatusToastDescription(nextStatus)}.`,
-        variant: "success",
-      });
-    } finally {
-      setUpdatingAppointmentId(null);
-    }
   }
 
   async function confirmDeleteAppointment() {
@@ -773,12 +737,7 @@ export function AppointmentsPage() {
               />
             ) : null
           ) : (
-            <CheckInTableView
-              appointments={visibleAppointments}
-              onAppointmentClick={handleAppointmentClick}
-              onAdvanceStatus={handleQueueAdvance}
-              updatingAppointmentId={updatingAppointmentId}
-            />
+            <AppointmentTableView appointments={visibleAppointments} onAppointmentClick={handleAppointmentClick} />
           )}
         </CardContent>
       </Card>
@@ -1028,8 +987,8 @@ function ViewSwitch({
   value,
   onChange,
 }: {
-  value: "slots" | "queue";
-  onChange: (value: "slots" | "queue") => void;
+  value: "slots" | "table";
+  onChange: (value: "slots" | "table") => void;
 }) {
   return (
     <div className="inline-flex rounded-xl border border-slate-200 bg-white p-0.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
@@ -1048,16 +1007,16 @@ function ViewSwitch({
       </button>
       <button
         type="button"
-        onClick={() => onChange("queue")}
+        onClick={() => onChange("table")}
         className={cn(
           "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition",
-          value === "queue"
+          value === "table"
             ? "bg-xroads-500 text-white shadow-sm"
             : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-zinc-900 dark:hover:text-slate-50",
         )}
       >
-        <BadgeCheck size={15} />
-        Check-in
+        <Table2 size={15} />
+        Table
       </button>
     </div>
   );
@@ -1094,30 +1053,4 @@ function sortAppointments(left: Appointment, right: Appointment) {
   const leftDate = `${left.date}T${normalizeTimeString(left.time) || left.time}`;
   const rightDate = `${right.date}T${normalizeTimeString(right.time) || right.time}`;
   return leftDate.localeCompare(rightDate);
-}
-
-function queueStatusToastTitle(status: AppointmentStatus) {
-  switch (status) {
-    case "Arrived":
-      return "Patient checked in";
-    case "In Consultation":
-      return "Consultation started";
-    case "Completed":
-      return "Appointment completed";
-    default:
-      return "Appointment updated";
-  }
-}
-
-function queueStatusToastDescription(status: AppointmentStatus) {
-  switch (status) {
-    case "Arrived":
-      return "ready to be seen";
-    case "In Consultation":
-      return "with the doctor";
-    case "Completed":
-      return "and marked complete";
-    default:
-      return "updated";
-  }
 }

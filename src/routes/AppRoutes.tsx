@@ -10,6 +10,7 @@ const DashboardPage = lazy(() => import("../pages/DashboardPage").then((module) 
 const CalendarPage = lazy(() => import("../pages/CalendarPage").then((module) => ({ default: module.CalendarPage })));
 const AppointmentsPage = lazy(() => import("../pages/AppointmentsPage").then((module) => ({ default: module.AppointmentsPage })));
 const CheckInsPage = lazy(() => import("../pages/CheckInsPage").then((module) => ({ default: module.CheckInsPage })));
+const ConsultationsPage = lazy(() => import("../pages/ConsultationsPage").then((module) => ({ default: module.ConsultationsPage })));
 const PatientsPage = lazy(() => import("../pages/PatientsPage").then((module) => ({ default: module.PatientsPage })));
 const DentistsPage = lazy(() => import("../pages/DentistsPage").then((module) => ({ default: module.DentistsPage })));
 const BranchesPage = lazy(() => import("../pages/BranchesPage").then((module) => ({ default: module.BranchesPage })));
@@ -42,6 +43,7 @@ export function AppRoutes() {
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/appointments" element={<AppointmentsPage />} />
               <Route path="/check-ins" element={<CheckInsPage />} />
+              <Route path="/consultations" element={<ConsultationsPage />} />
               <Route path="/patients" element={<PatientsPage />} />
               <Route path="/dentists" element={<DentistsPage />} />
               <Route path="/branches" element={<BranchesPage />} />

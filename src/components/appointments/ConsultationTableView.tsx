@@ -1,41 +1,30 @@
-import { CheckCircle2, ClipboardList, Clock3, LoaderCircle, UserRound } from "lucide-react";
+import { useMemo } from "react";
 import { format, isValid, parseISO } from "date-fns";
+import { CheckCircle2, ClipboardList, Clock3, LoaderCircle, Stethoscope, UserRound } from "lucide-react";
 import type { Appointment, AppointmentStatus } from "../../data/appointments";
 import { branches } from "../../data/branches";
 import { Badge, StatusBadge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { EmptyState } from "../shared/EmptyState";
 import { cn } from "../../lib/utils";
 import { formatTimeRange, getAppointmentDurationMinutes } from "./scheduler-utils";
 import { getBranchBadgeClass } from "../../lib/branch-badges";
-import { EmptyState } from "../shared/EmptyState";
 
-type QueueStatus = Extract<AppointmentStatus, "Pending" | "Confirmed" | "Arrived" | "In Consultation">;
+type ConsultationStatus = Extract<AppointmentStatus, "Arrived" | "In Consultation">;
 
-type QueueAction = {
+type ConsultationAction = {
   label: string;
   nextStatus: AppointmentStatus;
   helper: string;
   className: string;
 };
 
-const queueActionByStatus: Record<QueueStatus, QueueAction> = {
-  Pending: {
-    label: "Check in",
-    nextStatus: "Arrived",
-    helper: "Move to waiting room",
-    className: "bg-xroads-500 text-white hover:bg-xroads-600 border-xroads-500 hover:border-xroads-600",
-  },
-  Confirmed: {
-    label: "Check in",
-    nextStatus: "Arrived",
-    helper: "Mark patient arrived",
-    className: "bg-xroads-500 text-white hover:bg-xroads-600 border-xroads-500 hover:border-xroads-600",
-  },
+const actionByStatus: Record<ConsultationStatus, ConsultationAction> = {
   Arrived: {
-    label: "Start consult",
+    label: "Start consultation",
     nextStatus: "In Consultation",
-    helper: "Send patient to the doctor",
-    className: "bg-orange-500 text-white hover:bg-orange-600 border-orange-500 hover:border-orange-600",
+    helper: "Move into the chair",
+    className: "bg-sky-500 text-white hover:bg-sky-600 border-sky-500 hover:border-sky-600",
   },
   "In Consultation": {
     label: "Complete",
@@ -45,7 +34,7 @@ const queueActionByStatus: Record<QueueStatus, QueueAction> = {
   },
 };
 
-export function CheckInTableView({
+export function ConsultationTableView({
   appointments,
   onAppointmentClick,
   onAdvanceStatus,
@@ -56,24 +45,29 @@ export function CheckInTableView({
   onAdvanceStatus: (appointment: Appointment, nextStatus: AppointmentStatus) => void;
   updatingAppointmentId: string | null;
 }) {
-  const actionableAppointments = appointments.filter((appointment): appointment is Appointment & { status: QueueStatus } => appointment.status in queueActionByStatus);
-  const counts = actionableAppointments.reduce(
+  const consultationAppointments = useMemo(
+    () => appointments.filter((appointment): appointment is Appointment & { status: ConsultationStatus } => appointment.status in actionByStatus),
+    [appointments],
+  );
+
+  const counts = consultationAppointments.reduce(
     (accumulator, appointment) => {
       accumulator[appointment.status] += 1;
       return accumulator;
     },
     {
-      Pending: 0,
-      Confirmed: 0,
       Arrived: 0,
       "In Consultation": 0,
     },
   );
 
-  if (actionableAppointments.length === 0) {
+  if (consultationAppointments.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 dark:border-zinc-800 dark:bg-zinc-900/50">
-        <EmptyState title="No patients ready for check-in" description="Once appointments are booked for this day, they will appear here and can be moved through arrival and consultation." />
+        <EmptyState
+          title="No patients in consultation"
+          description="Patients move here after check-in. Use the consultation screen to document the treatment plan and complete the visit."
+        />
       </div>
     );
   }
@@ -85,16 +79,14 @@ export function CheckInTableView({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <ClipboardList size={18} className="text-xroads-600" />
-              <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">Check-in table</h2>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">Consultation board</h2>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Patients move from check-in to consultation and completion on the same day.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Open each patient, document the treatment plan, and complete the visit when finished.</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <SummaryPill label="Pending" value={counts.Pending} tone="amber" />
-            <SummaryPill label="Confirmed" value={counts.Confirmed} tone="sky" />
-            <SummaryPill label="Arrived" value={counts.Arrived} tone="orange" />
-            <SummaryPill label="In Consultation" value={counts["In Consultation"]} tone="emerald" />
+            <SummaryPill label="Arrived" value={counts.Arrived} tone="sky" />
+            <SummaryPill label="In consultation" value={counts["In Consultation"]} tone="emerald" />
           </div>
         </div>
       </div>
@@ -108,13 +100,13 @@ export function CheckInTableView({
               <th className="px-4 py-3">Dentist</th>
               <th className="px-4 py-3">Branch</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Next step</th>
+              <th className="px-4 py-3">Treatment plan</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
-            {actionableAppointments.map((appointment) => {
-              const action = queueActionByStatus[appointment.status];
+            {consultationAppointments.map((appointment) => {
+              const action = actionByStatus[appointment.status];
               const branch = branches.find((item) => item.id === appointment.branchId);
               const parsedDate = parseISO(appointment.date);
               const dateLabel = isValid(parsedDate) ? format(parsedDate, "MMM d") : "Unknown date";
@@ -129,7 +121,9 @@ export function CheckInTableView({
                   <td className="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-950 dark:text-slate-50">
                     <div className="flex items-center gap-2">
                       <Clock3 size={15} className="text-slate-400" />
-                      <span>{dateLabel} · {formatTimeRange(appointment.time, getAppointmentDurationMinutes(appointment))}</span>
+                      <span>
+                        {dateLabel} · {formatTimeRange(appointment.time, getAppointmentDurationMinutes(appointment))}
+                      </span>
                     </div>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
@@ -151,7 +145,12 @@ export function CheckInTableView({
                     <StatusBadge status={appointment.status} />
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
-                    {action.helper}
+                    <button type="button" className="max-w-[24rem] truncate text-left" onClick={(event) => {
+                      event.stopPropagation();
+                      onAppointmentClick(appointment.id);
+                    }} title={appointment.notes || "No treatment plan recorded yet"}>
+                      {appointment.notes || "No treatment plan recorded yet"}
+                    </button>
                   </td>
                   <td className="px-4 py-4">
                     <Button
@@ -184,20 +183,13 @@ function SummaryPill({
 }: {
   label: string;
   value: number;
-  tone: "sky" | "amber" | "orange" | "emerald";
+  tone: "sky" | "emerald";
 }) {
   const toneClass =
     tone === "sky"
       ? "bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-100 dark:ring-sky-900/50"
-      : tone === "amber"
-        ? "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-100 dark:ring-amber-900/50"
-        : tone === "orange"
-          ? "bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-500/10 dark:text-orange-100 dark:ring-orange-900/50"
-        : "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-900/50";
+      : "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-900/50";
 
-  return (
-    <Badge className={`${toneClass} px-3 py-1 text-[11px] font-semibold`}>
-      {label} {value}
-    </Badge>
-  );
+  return <Badge className={`${toneClass} px-3 py-1 text-[11px] font-semibold`}>{label} {value}</Badge>;
 }
+

@@ -106,6 +106,7 @@ export function AddDentistModal({
         roleId: "dentist",
         roleName: "Dentist",
         roleDescription: null,
+        roleAppointmentMarker: "Dentist",
         accessLevel: "Operational access",
         isSystemRole: false,
         status: form.status.toLowerCase() as StaffUser["status"],

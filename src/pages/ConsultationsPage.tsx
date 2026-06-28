@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { addDays, format, isSameDay, isValid, parseISO } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarClock } from "lucide-react";
 import type { Appointment, AppointmentStatus } from "../data/appointments";
@@ -21,6 +22,7 @@ import { UPDATED_EVENTS } from "../lib/create-events";
 const CONSULTATION_STATUSES: AppointmentStatus[] = ["Arrived", "In Consultation"];
 
 export function ConsultationsPage() {
+  const navigate = useNavigate();
   const branchScope = useBranchScope();
   const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -65,7 +67,7 @@ export function ConsultationsPage() {
 
   async function handleConsultationAction(action: ConsultationAction, appointment: Appointment, treatmentNotes: string) {
     if (activeAction) {
-      return;
+      return false;
     }
 
     setActiveAction(action);
@@ -90,7 +92,7 @@ export function ConsultationsPage() {
           description: noteResult.error,
           variant: "error",
         });
-        return;
+        return false;
       }
 
       if (action === "save") {
@@ -100,7 +102,7 @@ export function ConsultationsPage() {
           title: "Consultation notes saved",
           description: `${appointment.patientName}'s treatment plan has been updated.`,
         });
-        return;
+        return true;
       }
 
       const nextStatus = action === "start" ? "In Consultation" : "Completed";
@@ -115,7 +117,7 @@ export function ConsultationsPage() {
           description: statusResult.error ?? "We could not move the appointment forward.",
           variant: "error",
         });
-        return;
+        return false;
       }
 
       window.dispatchEvent(new CustomEvent(UPDATED_EVENTS.appointment, { detail: statusResult.data }));
@@ -131,10 +133,24 @@ export function ConsultationsPage() {
       if (action === "complete") {
         setSelectedAppointmentId(null);
       }
+
+      return true;
     } finally {
       setActiveAction(null);
       setBusyAppointmentId(null);
     }
+  }
+
+  async function handleStartConsultation(appointment: Appointment, treatmentNotes: string) {
+    const success = await handleConsultationAction("start", appointment, treatmentNotes);
+    if (!success) {
+      return;
+    }
+
+    navigate(
+      `/dental-chart?patientId=${encodeURIComponent(appointment.patientId ?? appointment.patientCode ?? "")}&appointmentCode=${encodeURIComponent(appointment.id)}`,
+    );
+    setSelectedAppointmentId(null);
   }
 
   return (
@@ -240,6 +256,13 @@ export function ConsultationsPage() {
         activeAction={activeAction}
         onClose={() => setSelectedAppointmentId(null)}
         onAction={(action, appointment, treatmentNotes) => void handleConsultationAction(action, appointment, treatmentNotes)}
+        onStartConsultation={(appointment, treatmentNotes) => void handleStartConsultation(appointment, treatmentNotes)}
+        onOpenDentalChart={(appointment) => {
+          navigate(
+            `/dental-chart?patientId=${encodeURIComponent(appointment.patientId ?? appointment.patientCode ?? "")}&appointmentCode=${encodeURIComponent(appointment.id)}`,
+          );
+          setSelectedAppointmentId(null);
+        }}
       />
     </div>
   );

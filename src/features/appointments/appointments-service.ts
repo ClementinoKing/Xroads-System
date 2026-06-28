@@ -2,6 +2,7 @@ import { supabase } from "../../lib/supabase";
 import type { Appointment, AppointmentStatus, PaymentType } from "../../data/appointments";
 import { isNetworkErrorMessage, toConnectivityError } from "../../lib/network-errors";
 import { normalizeTimeString } from "../../lib/time";
+import type { RoleAppointmentMarker } from "../staff/role-types";
 
 export type AppointmentRecordInput = {
   patientId: string;
@@ -95,7 +96,7 @@ function mapRow(row: AppointmentRow): Appointment {
     dentistId: row.dentist_id,
     dentistName: row.dentist_name,
     dentistRole: row.dentist_role,
-    dentistMarker: row.dentist_marker ?? undefined,
+    dentistMarker: (row.dentist_marker as RoleAppointmentMarker | null) ?? undefined,
     serviceId: row.service_id,
     serviceCode: row.service_code,
     service: row.service_name,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, CalendarDays, Clock3, MapPin, Stethoscope, UserRound, X } from "lucide-react";
+import { AlertTriangle, CalendarDays, ClipboardList, Clock3, MapPin, Stethoscope, UserRound, X } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import type { Appointment } from "../../data/appointments";
 import { branches } from "../../data/branches";
@@ -20,12 +20,16 @@ export function ConsultationWorkspaceModal({
   onClose,
   onAction,
   activeAction,
+  onOpenDentalChart,
+  onStartConsultation,
 }: {
   booking: Appointment | null;
   open: boolean;
   onClose: () => void;
   onAction: (action: ConsultationAction, appointment: Appointment, treatmentNotes: string) => void;
   activeAction: ConsultationAction | null;
+  onOpenDentalChart?: (appointment: Appointment) => void;
+  onStartConsultation?: (appointment: Appointment, treatmentNotes: string) => void;
 }) {
   const [notesDraft, setNotesDraft] = useState("");
 
@@ -151,6 +155,12 @@ export function ConsultationWorkspaceModal({
               {isArrived ? "Start the consultation when the patient is ready." : isInConsultation ? "Finish the clinical notes before completing the visit." : "This consultation has already been completed."}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {onOpenDentalChart ? (
+                <Button type="button" variant="outline" onClick={() => onOpenDentalChart(booking)} disabled={isBusy}>
+                  <ClipboardList size={16} />
+                  Open chart
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"
@@ -163,7 +173,14 @@ export function ConsultationWorkspaceModal({
                 <Button
                   type="button"
                   className="bg-sky-500 text-white shadow-sm hover:bg-sky-600"
-                  onClick={() => onAction("start", booking, treatmentNotes)}
+                  onClick={() => {
+                    if (onStartConsultation) {
+                      onStartConsultation(booking, treatmentNotes);
+                      return;
+                    }
+
+                    onAction("start", booking, treatmentNotes);
+                  }}
                   disabled={isBusy}
                 >
                   Start consultation

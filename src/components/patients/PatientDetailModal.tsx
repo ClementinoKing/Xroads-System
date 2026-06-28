@@ -1,13 +1,23 @@
 import { createPortal } from "react-dom";
 import type { LucideIcon } from "lucide-react";
-import { CalendarDays, CreditCard, Mail, MapPin, Phone, UserRound, X } from "lucide-react";
+import { CalendarDays, ClipboardList, CreditCard, Mail, MapPin, Phone, UserRound, X } from "lucide-react";
 import type { Patient } from "../../data/patients";
 import { branches } from "../../data/branches";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 
-export function PatientDetailModal({ patient, open, onClose }: { patient: Patient | null; open: boolean; onClose: () => void }) {
+export function PatientDetailModal({
+  patient,
+  open,
+  onClose,
+  onOpenDentalChart,
+}: {
+  patient: Patient | null;
+  open: boolean;
+  onClose: () => void;
+  onOpenDentalChart?: (patient: Patient) => void;
+}) {
   if (!open || !patient) return null;
   if (typeof document === "undefined") return null;
 
@@ -34,9 +44,17 @@ export function PatientDetailModal({ patient, open, onClose }: { patient: Patien
                 </div>
               </div>
             </div>
-            <Button type="button" variant="outline" className="h-11 w-11 shrink-0 rounded-xl p-0" onClick={onClose} aria-label="Close patient detail modal">
-              <X size={28} strokeWidth={2.2} />
-            </Button>
+            <div className="flex items-center gap-2">
+              {onOpenDentalChart ? (
+                <Button type="button" variant="outline" className="h-11 px-3" onClick={() => onOpenDentalChart(patient)}>
+                  <ClipboardList size={17} />
+                  Dental chart
+                </Button>
+              ) : null}
+              <Button type="button" variant="outline" className="h-11 w-11 shrink-0 rounded-xl p-0" onClick={onClose} aria-label="Close patient detail modal">
+                <X size={20} strokeWidth={2.2} />
+              </Button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-5">

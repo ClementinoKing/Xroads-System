@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CircleAlert, PenSquare, Plus, RotateCcw, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import { branches } from "../data/branches";
 import { Badge } from "../components/ui/Badge";
@@ -18,6 +19,7 @@ import { getFriendlyPalette } from "../lib/color-palettes";
 type BranchFilter = "All" | string;
 
 export function PatientsPage() {
+  const navigate = useNavigate();
   const { patients, isLoading, error, refetch } = usePatients();
   const [search, setSearch] = useState("");
   const [branch, setBranch] = useState<BranchFilter>("All");
@@ -255,7 +257,15 @@ export function PatientsPage() {
           void handleDeletePatient();
         }}
       />
-      <PatientDetailModal open={Boolean(selectedPatient)} patient={selectedPatient} onClose={() => setSelectedPatientId(null)} />
+      <PatientDetailModal
+        open={Boolean(selectedPatient)}
+        patient={selectedPatient}
+        onClose={() => setSelectedPatientId(null)}
+        onOpenDentalChart={(patient) => {
+          setSelectedPatientId(null);
+          navigate(`/dental-chart?patientId=${encodeURIComponent(patient.id)}`);
+        }}
+      />
     </div>
   );
 }
